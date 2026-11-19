@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>DASHBOARD PERUSAHAAN</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #bbcc7c; }
+ .navbar { background-color: #131516; display: flex; gap: 12px; padding: 12px 20px; border-radius: 0 0 15px 15px; flex-wrap: wrap; }
+ .navbar a { color: rgb(184, 209, 115); padding: 10px 22px; text-decoration: none; font-weight: bold; border-radius: 50px; transition: 0.3s; font-size: 14px; opacity: 0.7; cursor: pointer; }
+ .navbar a:hover { transform: translateY(-2px); opacity: 1; }
+ .nav-dashboard { background: #e67e22; }
+ .nav-resto { background: #27ae60; }
+ .nav-inventory { background: #2980b9; }
+ .nav-selesai { background: #8e44ad; }
+ .nav-kontakme { background: #ec5fbd; }
+ .navbar a.active { opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: scale(1.05); }
+ .content { padding: 40px; }
+ .marquee { background: #e67e22; color: white; padding: 12px 0; font-weight: bold; font-size: 16px; border-radius: 8px; margin-bottom: 20px; overflow: hidden; white-space: nowrap; }
+ .marquee span { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; }
+   @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+ .slider { position: relative; width: 100%; height: 350px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; background: #000; }
+ .slide { position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 1s ease-in-out; }
+ .slide.active { opacity: 1; }
+ .slide img,.slide video { width: 100%; height: 100%; object-fit: cover; }
+ .card { background: rgba(243, 242, 237, 0.753); padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+ .card h3 { margin-top: 0; color: #2c3e50; }
+ .card p { font-size: 24px; font-weight: bold; color: #e67e22; margin: 10px 0 0 0; }
+ .navbar a { color: #FFFFFF!important; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.6); text-decoration: none; padding: 10px 18px; border-radius: 20px; display: inline-block; margin: 5px; }
+ .nav-dashboard { background: #FF8C00; }
+ .nav-resto { background: #228B22; }
+ .nav-inv { background: #241799; }
+ .nav-general { background: #d30707; }
+ .nav-selesai { background: #6A0DAD; }
+ .nav-kontakme { background: #C71585; }
+ .modal-warning { display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(3px); }
+ .modal-box { background:#fff; margin:15% auto; padding:30px; border-radius:15px; width:90%; max-width:420px; text-align:center; border-top:6px solid #d30707; animation:pop 0.3s; }
+  @keyframes pop { from{transform:scale(0.8);} to{transform:scale(1);} }
+ .modal-box i { font-size:50px; color:#d30707; }
+ .modal-box h3 { margin:15px 0 10px 0; color:#1e293b; }
+ .modal-box p { color:#64748b; font-size:14px; line-height:1.6; }
+ .btn-tutup { margin-top:15px; background:#d30707; color:#fff; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:600; }
+ .btn-wa { margin-top:10px; background:#25D366; color:#fff; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:600; margin-left:10px; }
+ .backup-bar { background:#131516; color:#b8d173; font-size:12px; padding:8px 20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+ .backup-bar button { background:#FF8C00; border:0; padding:6px 12px; border-radius:20px; font-weight:bold; cursor:pointer; }
+ .backup-bar button.sec { background:#333; color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a href="loginresto.html" class="nav-resto">RESTO</a>
+    <a href="menuinv.html" class="nav-inv">Inventory</a>
+    <a href="#" onclick="showWarning('General Ledger')" class="nav-general">GENERAL LEDGER</a>
+    <a href="selesai.html" class="nav-selesai">SELESAI</a>
+    <a href="https://wa.me/6282340152478" target="_blank" class="nav-kontakme">Contact US : Ivan Made Diarsa 082340152478</a>
+  </div>
+  <div class="backup-bar">
+    <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
+    <button onclick="backupSekarang('manual')">Backup Sekarang</button>
+    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore Backup</button>
+    <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+    <span id="logBackup" style="color:#aaa"></span>
+  </div>
+  <div class="content">
+    <h1>DASHBOARD PERUSAHAAN</h1>
+    <div class="marquee">
+      <span id="marqueeText">🔥 PROMO HARI INI: MENU BARU->> KAMBING LARI TERPELESET Hanya 999K! | Gratis Es Teh untuk 20 Pembeli Pertama! | Buka Setiap Hari 10:00 - 22:00 🔥 🔥 PROMO HARI INI: MENU BARU->> BEBEK TENGGELAM Hanya 999K! | Gratis Es Teh untuk 20 Pembeli Pertama! | Buka Setiap Hari 10:00 - 22:00 🔥</span>
+   </div>
+    <div class="slider" id="sliderPromo">
+      <div class="slide active" data-mulai="2026-11-01" data-selesai="2026-11-15" data-aktif="1"><img src="https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg" alt="Interior Resto"></div>
+      <div class="slide" data-mulai="2026-11-01" data-selesai="2026-11-15" data-aktif="1"><video autoplay muted loop playsinline><source src="https://videos.pexels.com/video-files/1646753/1646753-hd_1920_1080_25fps.mp4" type="video/mp4"></video></div>
+      <div class="slide" data-mulai="2026-11-16" data-selesai="2026-11-30" data-aktif="1"><img src="https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg" alt="Menu Makanan"></div>
+      <div class="slide" data-mulai="2026-11-01" data-selesai="2026-11-30" data-aktif="1"><img src="https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg" alt="Chef"></div>
+    </div>
+    <div class="card"><h3>Total Penjualan Hari Ini</h3><p id="totalPenjualan">Rp 0</p></div>
+    <div class="card"><h3>Total Biaya Inventory</h3><p id="totalInventory">Rp 0</p></div>
+    <div class="card"><h3>Laba Bersih</h3><p id="labaBersih">Rp 0</p></div>
+  </div>
+  <div id="modalWarning" class="modal-warning"><div class="modal-box"><i class="fa-solid fa-triangle-exclamation"></i><h3 id="judulWarning">Modul Belum Aktif</h3><p id="pesanWarning"></p><button class="btn-tutup" onclick="closeWarning()">Tutup</button><button class="btn-wa" onclick="window.open('https://wa.me/6282340152478', '_blank')">Hubungi Admin</button></div></div>
+  <script>
+    let currentSlide = 0;
+    let slides = document.querySelectorAll('.slide');
+    function nextSlide() {
+      let visible = Array.from(document.querySelectorAll('.slide')).filter(s => s.style.display !== 'none');
+      if(visible.length === 0) return;
+      let activeIdx = visible.findIndex(s => s.classList.contains('active'));
+      if(activeIdx >= 0) visible[activeIdx].classList.remove('active');
+      let nextIdx = (activeIdx + 1) % visible.length;
+      if(nextIdx < 0) nextIdx = 0;
+      visible[nextIdx].classList.add('active');
+      currentSlide = nextIdx;
+    }
+    setInterval(nextSlide, 4000);
+    function showWarning(namaModul) {
+        document.getElementById('judulWarning').innerText = `⚠️ MODUL ${namaModul.toUpperCase()} BELUM AKTIF`;
+        document.getElementById('pesanWarning').innerText = `Modul ${namaModul} masih dalam tahap pengembangan. Silahkan hubungi Admin untuk informasi lebih lanjut.`;
+        document.getElementById('modalWarning').style.display = 'block';
+    }
+    function closeWarning() { document.getElementById('modalWarning').style.display = 'none'; }
+    window.onclick = function(event) { if (event.target == document.getElementById('modalWarning')) { closeWarning(); } }
+    const KEY_DATA = 'restopro_data_v1';
+    const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
+    function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
+    function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+    function loadData(){ let raw = localStorage.getItem(KEY_DATA); if(!raw){ let awal = { toko: 'RESTOPRO', dibuat: new Date().toISOString(), promo_gallery: [], transaksi: [], inventory: [] }; localStorage.setItem(KEY_DATA, JSON.stringify(awal)); return awal; } return JSON.parse(raw); }
+    function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
+    function cekBackupHarian(){
+      let tgl = tanggalHariIni();
+      if(sessionStorage.getItem('backupSudahJalanHariIni') === tgl){ document.getElementById('statusBackup').textContent = '✅ Backup Hari Ini Sudah Ada'; return true; }
+      let logRaw = localStorage.getItem(KEY_BACKUP_LOG);
+      let log = logRaw ? JSON.parse(logRaw) : {};
+      let el = document.getElementById('statusBackup');
+      if(log[tgl]){ sessionStorage.setItem('backupSudahJalanHariIni', tgl); el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; return true; }
+      else { el.textContent = '⏳ Belum Ada Backup Hari Ini, Backup Dulu...'; sessionStorage.setItem('backupSudahJalanHariIni', tgl); backupSekarang('auto-pagi'); return false; }
+    }
+    function backupSekarang(mode){
+      let data = loadData();
+      let namaFile = buatNamaFile();
+      let tgl = tanggalHariIni();
+      let logRaw = localStorage.getItem(KEY_BACKUP_LOG);
+      let log = logRaw ? JSON.parse(logRaw) : {};
+      log[tgl] = namaFile;
+      localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
+      let blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
+      document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+      document.getElementById('logBackup').textContent = 'File auto download ke Download. Upload juga ke Google Drive untuk Redundance Lapis 3.';
+    }
+    function restoreFile(e){ let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(){ try{ let data = JSON.parse(reader.result); saveData(data); alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!'); location.reload(); }catch(err){ alert('File backup rusak beb!'); } }; reader.readAsText(file); }
+    function filterPromoByTanggal(){
+      let hariIni = tanggalHariIni();
+      let all = document.querySelectorAll('.slide');
+      all.forEach(s => { let mulai = s.getAttribute('data-mulai'); let selesai = s.getAttribute('data-selesai'); let aktif = s.getAttribute('data-aktif'); if(!mulai || !selesai){ s.style.display = ''; return; } if(aktif === '0' || hariIni < mulai || hariIni > selesai){ s.style.display = 'none'; s.classList.remove('active'); } else { s.style.display = ''; } });
+      let visible = Array.from(document.querySelectorAll('.slide')).filter(s => s.style.display !== 'none');
+      if(visible.length > 0){ visible.forEach(s => s.classList.remove('active')); visible[0].classList.add('active'); currentSlide = 0; }
+    }
+    window.addEventListener('DOMContentLoaded', function(){ loadData(); filterPromoByTanggal(); cekBackupHarian(); });
+  </script>
+</body>
+</html>

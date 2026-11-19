@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTOPRO - Kelola Meja FINAL</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+body{font-family:'Poppins',sans-serif;margin:0;background:#f1f5f9}
+.navbar{background:#0f172a;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.navbar a{color:#cbd5e1;text-decoration:none;font-size:13px;font-weight:500}
+.navbar a.active{color:#f97316}
+.container{padding:20px 30px}.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.form-row{display:flex;gap:10px;margin-bottom:15px;align-items:center;flex-wrap:wrap}
+input{padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px}
+.btn-simpan{background:#10b981;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer}
+.btn-fix{background:#f59e0b;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer}
+table{width:100%;border-collapse:collapse}th{background:#1e293b;color:#fff;padding:12px;text-align:left;font-size:13px}
+td{border:1px solid #e2e8f0;padding:12px;font-size:13px;vertical-align:middle}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}.badge-kosong{background:#dcfce7;color:#166534}.badge-pakai{background:#fee2e2;color:#991b1b}
+.btn-aksi{padding:6px 10px;border:none;border-radius:5px;cursor:pointer;font-size:12px;margin-right:4px;color:#fff}.btn-qr{background:#3b82f6}.btn-hapus{background:#ef4444}
+#modalQR{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:15px}
+.modalBox{background:#fff;padding:24px;border-radius:18px;text-align:center;max-width:380px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+#qrLarge{display:flex;justify-content:center;margin:15px 0;padding:15px;background:#fff;border:2px dashed #cbd5e1;border-radius:12px}
+.backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;}
+.backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
+.backup-bar button.sec{background:#334155;}
+</style></head><body>
+<div class="navbar">
+  <div style="font-weight:700;color:#f97316;">🍽️ RESTOPRO</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <a href="dashboard.html">📊 Dashboard</a>
+    <a href="master.html">📦 Master Data</a>
+    <a href="meja.html" class="active">🪑 Meja</a>
+    <a href="kasir.html">💼 Kasir</a>
+    <a href="kasorder.html">🔔 Order Cust</a>
+    <a href="pettycash.html">👛 Petty Cash</a>
+    <a href="laporan.html">📄 Laporan</a>
+    <a href="tools.html">⚙️ Tools</a>
+  </div>
+</div>
+<div class="backup-bar">
+  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <span id="totalMeja" style="background:#0f172a;padding:4px 10px;border-radius:20px;">Total Meja: 0</span>
+    <button onclick="backupSekarang('manual')">Backup Manual</button>
+    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
+  </span>
+  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+</div>
+<div class="container"><div class="card">
+<h2>🪑 Kelola Data Meja - FINAL LINK MENU</h2>
+<div class="form-row"><label>Nomor Meja</label><input id="nomorMeja" placeholder="Contoh: ANGGREK_BULAN"><label>Kapasitas</label><input id="kapasitas" type="number" value="10" style="width:100px"><button onclick="simpanMeja()" class="btn-simpan">💾 Simpan Meja</button><button onclick="fixDataLama()" class="btn-fix">🛠️ Fix Data Lama</button></div>
+<p style="font-size:12px;color:#64748b">✅ QR sekarang scan langsung buka <b>selforder.html?meja=NAMA_MEJA</b> beb! Data dari LocalStorage beb, bukan Firebase lagi!</p>
+<table><thead><tr><th>Nomor Meja</th><th>Kapasitas</th><th>Status</th><th>QR Menu</th><th>Aksi</th></tr></thead><tbody id="tbodyMeja"><tr><td colspan="5">Loading...</td></tr></tbody></table>
+</div></div>
+
+<div id="modalQR" onclick="if(event.target===this) tutupModal()">
+<div class="modalBox">
+<div style="display:flex;justify-content:space-between;align-items:center"><b id="qrLabel" style="font-size:16px">MEJA</b><span onclick="tutupModal()" style="cursor:pointer;font-size:20px">✕</span></div>
+<div id="qrLarge"></div>
+<p id="qrLink" style="font-size:11px;color:#64748b;word-break:break-all;background:#f1f5f9;padding:8px;border-radius:6px;margin:8px 0"></p>
+<p style="font-size:12px;color:#10b981;font-weight:700;margin:6px 0">✅ Scan langsung buka Menu + Memo Popup</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+<button onclick="printQR()" style="background:#1e293b;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">🖨️ Print</button>
+<button onclick="downloadQR()" style="background:#3b82f6;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">⬇️ Download PNG</button>
+</div>
+<button onclick="testBuka()" style="width:100%;margin-top:8px;background:#10b981;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">🔗 Test Buka Link</button>
+<button onclick="tutupModal()" style="width:100%;margin-top:8px;background:#e2e8f0;border:none;padding:10px;border-radius:8px;cursor:pointer">Tutup</button>
+</div>
+</div>
+
+<script>
+  // ===== MEJA - 100% LOCALSTORAGE, TANPA FIREBASE! =====
+  const KEY_DATA = 'restopro_data_v1';
+  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
+  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
+  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+  function loadData(){
+    let raw = localStorage.getItem(KEY_DATA);
+    if(!raw){
+      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], pettyCash:0 };
+      localStorage.setItem(KEY_DATA, JSON.stringify(awal));
+      return awal;
+    }
+    let data = JSON.parse(raw);
+    if(!data.mejaData){
+      // Migrasi kalau masih format lama: data.meja = {NAMA: {nomor, kapasitas}}
+      if(data.meja && typeof data.meja === 'object' && !Array.isArray(data.meja)){
+        data.mejaData = Object.keys(data.meja).map(k => {
+          let v = data.meja[k] || {};
+          let nomor = String(v.nomor || v.nama || k).toUpperCase().replace(/\s+/g,'_');
+          return { key: k, nomor, kapasitas: parseInt(v.kapasitas || 10) || 10 };
+        });
+      } else data.mejaData = [];
+    }
+    if(!data.orders) data.orders = [];
+    if(!data.transaksi) data.transaksi = [];
+    return data;
+  }
+  function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
+  function cekStatusSaja(){
+    let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
+    if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; }
+  }
+  function backupSekarang(mode){
+    let data = loadData(); let userLogin = localStorage.getItem('userLogin');
+    let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
+    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
+    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+  }
+  function restoreFile(e){
+    let file = e.target.files[0]; if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(){
+      try{
+        let data = JSON.parse(reader.result);
+        if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin));
+        localStorage.setItem(KEY_DATA, JSON.stringify(data));
+        alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!');
+        location.reload();
+      }catch(err){ alert('File backup rusak beb!'); }
+    };
+    reader.readAsText(file);
+  }
+
+  let mejaData=[]; let orderAktif={}; const baseUrl="https://restopro2026.netlify.app/baru.html";
+  let currentQRLink=""; let currentQRNomor="";
+
+  function refreshData(){
+    let data = loadData();
+    mejaData = (data.mejaData || []).map(m => {
+      let nomor = String(m.nomor || m.nama || m.key || '').toUpperCase().replace(/\s+/g,'_');
+      if(nomor.startsWith('-P')) return null;
+      return { key: m.key || m.nomor || nomor, nomor, kapasitas: parseInt(m.kapasitas || 10) || 10 };
+    }).filter(Boolean);
+
+    // STATUS TERPAKAI dari orders + transaksi di LocalStorage
+    orderAktif = {};
+    let semuaOrder = [];
+    if(Array.isArray(data.orders)) semuaOrder = semuaOrder.concat(data.orders);
+    if(Array.isArray(data.transaksi)) semuaOrder = semuaOrder.concat(data.transaksi);
+    // Kalau orders masih object {id: {...}}
+    if(data.orders && !Array.isArray(data.orders) && typeof data.orders === 'object') semuaOrder = semuaOrder.concat(Object.values(data.orders));
+    semuaOrder.forEach(o => {
+      if(!o || !o.meja) return;
+      let st = String(o.status || '').toUpperCase();
+      if(!['SELESAI','BAYAR','LUNAS','DONE','CANCEL'].includes(st)){
+        orderAktif[String(o.meja).toUpperCase().replace(/\s+/g,'_')] = o.status;
+      }
+    });
+    render();
+  }
+
+  window.simpanMeja=function(){
+    let n=document.getElementById('nomorMeja').value.trim().toUpperCase().replace(/\s+/g,'_');
+    let k=document.getElementById('kapasitas').value||10;
+    if(!n) return alert('Isi nomor meja beb!');
+    if(n.startsWith('-P')) return alert('Jangan pakai -P beb!');
+    let data = loadData();
+    // Kalau udah ada, update kapasitasnya aja beb, jangan dobel!
+    let idx = (data.mejaData || []).findIndex(m => String(m.nomor).toUpperCase() === n);
+    if(idx >= 0){
+      data.mejaData[idx].kapasitas = parseInt(k);
+    } else {
+      data.mejaData.push({ key: n, nama: n, nomor: n, kapasitas: parseInt(k), aktif: true, created: Date.now() });
+    }
+    saveData(data);
+    document.getElementById('nomorMeja').value='';
+    refreshData();
+  }
+  window.fixDataLama=function(){
+    if(!confirm('Hapus data rusak -Pxxxx beb?')) return;
+    let data = loadData();
+    let sebelum = (data.mejaData || []).length;
+    data.mejaData = (data.mejaData || []).filter(m => {
+      let nomor = String(m.nomor || m.key || '');
+      let key = String(m.key || '');
+      return !nomor.startsWith('-P') && !key.startsWith('-P');
+    });
+    saveData(data);
+    alert('Done beb! Dihapus ' + (sebelum - data.mejaData.length) + ' data rusak beb!');
+    refreshData();
+  }
+  window.render=function(){
+    let tbody=document.getElementById('tbodyMeja');
+    let elTotal = document.getElementById('totalMeja');
+    if(elTotal) elTotal.textContent = 'Total Meja: ' + mejaData.length;
+    if(mejaData.length==0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8">Belum ada meja beb - Tambah di atas dulu beb!</td></tr>'; return; }
+    tbody.innerHTML=mejaData.map(m=>{
+      let isPakai=orderAktif[m.nomor];
+      let status=isPakai? `<span class="badge badge-pakai">Terpakai</span>`:`<span class="badge badge-kosong">Kosong</span>`;
+      return `<tr><td><b>${m.nomor}</b></td><td>${m.kapasitas} Orang</td><td>${status}</td><td><div id="qr-${m.nomor}" style="cursor:pointer" onclick="previewQR('${m.nomor}')"></div></td><td><button class="btn-aksi btn-qr" onclick="previewQR('${m.nomor}')">📱 QR Menu</button><button class="btn-aksi btn-hapus" onclick="hapusMeja('${m.key}')">Hapus</button></td></tr>`;
+    }).join('');
+    setTimeout(()=>{ mejaData.forEach(m=>{ let el=document.getElementById(`qr-${m.nomor}`); if(el){ el.innerHTML=''; new QRCode(el,{text:`${baseUrl}?meja=${encodeURIComponent(m.nomor)}`,width:70,height:70}); } }); },300);
+  }
+  window.previewQR=function(nomor){
+    currentQRNomor=nomor; currentQRLink=`${baseUrl}?meja=${encodeURIComponent(nomor)}`;
+    document.getElementById('qrLabel').innerText=`MEJA ${nomor.replace(/_/g,' ')}`;
+    document.getElementById('qrLink').innerText=currentQRLink;
+    document.getElementById('qrLarge').innerHTML='';
+    new QRCode(document.getElementById('qrLarge'),{text:currentQRLink,width:220,height:220,correctLevel:QRCode.CorrectLevel.H});
+    document.getElementById('modalQR').style.display='flex';
+  }
+  window.tutupModal=function(){ document.getElementById('modalQR').style.display='none'; }
+  window.printQR=function(){
+    let qr=document.getElementById('qrLarge').innerHTML;
+    let w=window.open('','_blank');
+    w.document.write(`<html><head><title>QR ${currentQRNomor}</title><style>body{font-family:Poppins,sans-serif;text-align:center;padding:30px}h1{font-size:28px;margin-bottom:10px}.box{display:flex;justify-content:center;margin:20px 0}small{color:#64748b}</style></head><body><h1>MEJA ${currentQRNomor.replace(/_/g,' ')}</h1><div class="box">${qr}</div><p><b>Scan untuk Buka Menu</b></p><small>${currentQRLink}</small><p style="margin-top:20px;font-size:12px">restopro2026.netlify.app</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    w.document.close();
+  }
+  window.downloadQR=function(){
+    let canvas=document.querySelector('#qrLarge canvas');
+    if(!canvas){ alert('QR belum siap beb!'); return; }
+    let a=document.createElement('a'); a.download=`QR-${currentQRNomor}.png`; a.href=canvas.toDataURL('image/png'); a.click();
+  }
+  window.testBuka=function(){ window.open(currentQRLink,'_blank'); }
+  window.hapusMeja=function(key){
+    if(confirm(`Hapus meja ${key} beb?`)){
+      let data = loadData();
+      data.mejaData = (data.mejaData || []).filter(m => String(m.key) !== String(key) && String(m.nomor) !== String(key));
+      saveData(data);
+      refreshData();
+    }
+  }
+
+  cekStatusSaja();
+  refreshData();
+</script></body></html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bahan - 2 Card Rapat</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{font-family:Poppins,sans-serif;margin:0;background:#f6f8fb;color:#0f172a}
+.tabs{display:flex;gap:8px;background:#fff;padding:12px 18px;overflow-x:auto;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:10}
+.tab{padding:8px 14px;border-radius:999px;font-weight:700;font-size:11px;text-decoration:none;color:#0f172a;background:#f1f5f9;white-space:nowrap}
+.tab.active{background:#f97316;color:#fff}
+.container{padding:14px;max-width:1600px;margin:auto}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid #f1f5f9}
+.card-left{padding:16px;position:sticky;top:62px}
+.card-right{padding:8px 10px}
+@media(max-width:900px){.card-left{position:static}}
+.card h3{margin:0 0 12px 0;font-size:13px}
+label{font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+input,select{padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;width:100%;font-family:Poppins;font-size:12px;background:#fff;margin-bottom:10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:Poppins}
+.btn-orange{background:#f97316;color:#fff;width:100%;padding:11px;font-size:12px}
+.btn-plus{background:#10b981;color:#fff;width:36px;height:36px;font-size:16px;border-radius:8px}
+.btn-min{background:#ef4444;color:#fff;width:36px;height:36px;font-size:16px;border-radius:8px}
+.btn-edit{background:#3b82f6;color:#fff;padding:3px 7px;border-radius:5px;font-size:11px;height:22px}
+.btn-del{background:#ef4444;color:#fff;padding:3px 7px;border-radius:5px;font-size:11px;height:22px}
+table{width:100%;border-collapse:collapse}
+th{color:#94a3b8;font-size:9px;text-transform:uppercase;letter-spacing:.5px;padding:6px 6px;text-align:left;background:#f8fafc;position:sticky;top:0;font-weight:700}
+td{padding:6px 6px;border-top:1px solid #f1f5f9;vertical-align:middle;line-height:1.1;font-size:11.5px}
+.nilai{font-weight:700}
+.scroll{max-height:82vh;overflow:auto}
+.badge-count{font-size:10px;background:#f1f5f9;padding:3px 8px;border-radius:99px}
+</style>
+</head><body>
+<div class="tabs">
+<a class="tab" href="invmenu.html">📊 Dashboard</a>
+<a class="tab active" href="bahan.html">🥩 Bahan +/-</a>
+<a class="tab" href="supplier.html">🚚 Supplier</a>
+<a class="tab" href="notabeli.html">📥 Nota Beli</a>
+<a class="tab" href="hutang.html">💸 Hutang</a>
+<a class="tab" href="keluar.html">🍳 Keluar</a>
+<a class="tab" href="kartu.html">📇 Kartu</a>
+<a class="tab" href="opname.html">📝 Opname</a>
+</div>
+
+<div class="container">
+<div class="layout">
+<!-- KIRI -->
+<div class="card card-left">
+<h3>🥩 Input Bahan</h3>
+<label>Nama Bahan</label><input id="bNama" placeholder="Contoh: Daging Ayam">
+<label>Kategori</label>
+<div style="display:flex;gap:6px;margin-bottom:10px"><select id="bKategori" style="flex:1;margin-bottom:0"></select><button class="btn btn-plus" onclick="tambahKategori()">+</button><button class="btn btn-min" onclick="hapusKategori()">−</button></div>
+<label>Satuan</label><select id="bSatuan"><option>KG</option><option>Gram</option><option>Pcs</option><option>Liter</option><option>Karung</option><option>Pack</option></select>
+<div class="row2">
+<div><label>Stok Min</label><input type="number" id="bMin" value="5"></div>
+<div><label>Saldo Awal</label><input type="number" id="bStokAwal" value="0"></div>
+</div>
+<div class="row2">
+<div><label>Stok Saat Ini</label><input type="number" id="bStok" value="0"></div>
+<div><label>Harga Avg</label><input type="number" id="bHarga" value="0"></div>
+</div>
+<button id="btnSimpan" class="btn btn-orange" onclick="simpan()">+ SIMPAN BAHAN</button>
+<button id="btnBatal" class="btn" style="display:none;background:#f1f5f9;margin-top:8px;width:100%;padding:10px;font-size:12px" onclick="batal()">Batal Edit</button>
+</div>
+
+<!-- KANAN -->
+<div class="card card-right">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px"><h3 style="margin:0">📦 Data Bahan</h3><span id="jml" class="badge-count">0 item</span></div>
+<div class="scroll">
+<table>
+<thead><tr><th>BAHAN</th><th>SALDO AWAL</th><th>STOK</th><th>HARGA</th><th>NILAI</th><th>AKSI</th></tr></thead>
+<tbody id="tabel"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI",
+  authDomain: "restopro2026-60038.firebaseapp.com",
+  databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "restopro2026-60038",
+  storageBucket: "restopro2026-60038.firebasestorage.app",
+  messagingSenderId: "336434967293",
+  appId: "1:336434967293:web:ba55b927cd01aa0229c494"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let bahan=[], kategori=[], editId=null;
+const defaultKat = ['Daging','Beras','Sayur','Bumbu','Minyak','Packaging','Seafood','Frozen','Makanan','Minuman','Lain'];
+
+onValue(ref(db,'inventory_bahan'), s=>{
+  bahan = s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[];
+  render();
+});
+onValue(ref(db,'inventory_kategori'), s=>{
+  if(!s.val()){
+    defaultKat.forEach(k=>push(ref(db,'inventory_kategori'),{nama:k}));
+    kategori = defaultKat.map(n=>({nama:n}));
+  }else{
+    kategori = Object.keys(s.val()).map(k=>({id:k,...s.val()[k]}));
+  }
+  renderKat();
+});
+
+function renderKat(){
+  const sel = document.getElementById('bKategori');
+  const cur = sel.value;
+  sel.innerHTML = kategori.map(k=>`<option value="${k.nama}">${k.nama}</option>`).join('');
+  if(cur) sel.value = cur;
+}
+window.tambahKategori = async()=>{
+  let n = prompt('Nama kategori baru beb?'); if(!n) return; n=n.trim(); if(!n) return;
+  if(kategori.some(k=>k.nama.toLowerCase()===n.toLowerCase())) return alert('Sudah ada beb!');
+  await push(ref(db,'inventory_kategori'),{nama:n, created:Date.now()});
+  setTimeout(()=>{ document.getElementById('bKategori').value=n; },400);
+};
+window.hapusKategori = async()=>{
+  const nama = document.getElementById('bKategori').value;
+  if(!nama) return alert('Pilih kategori dulu beb!');
+  if(kategori.length<=1) return alert('Minimal 1 kategori beb!');
+  if(!confirm('Hapus "'+nama+'"?')) return;
+  const k = kategori.find(x=>x.nama===nama);
+  if(k && k.id) await remove(ref(db,'inventory_kategori/'+k.id));
+};
+
+window.simpan = async()=>{
+  const nama = document.getElementById('bNama').value.trim();
+  if(!nama) return alert('Nama bahan wajib isi beb!');
+  const d = {
+    nama: nama, kategori: document.getElementById('bKategori').value,
+    satuan: document.getElementById('bSatuan').value,
+    stok_min: +document.getElementById('bMin').value||0,
+    stok_awal: +document.getElementById('bStokAwal').value||0,
+    stok: +document.getElementById('bStok').value||0,
+    saldo: +document.getElementById('bStok').value||0,
+    qty: +document.getElementById('bStok').value||0,
+    harga_avg: +document.getElementById('bHarga').value||0,
+    harga: +document.getElementById('bHarga').value||0,
+    updated: Date.now()
+  };
+  if(editId){
+    await update(ref(db,'inventory_bahan/'+editId), d);
+    await update(ref(db,'bahan_baku/'+editId), d);
+  }else{
+    d.created=Date.now();
+    const newKey = push(ref(db,'inventory_bahan')).key;
+    await set(ref(db,'inventory_bahan/'+newKey), d);
+    await set(ref(db,'bahan_baku/'+newKey), d);
+  }
+  batal();
+};
+window.edit = (id)=>{
+  const b = bahan.find(x=>x.id===id); if(!b) return;
+  document.getElementById('bNama').value=b.nama;
+  document.getElementById('bKategori').value=b.kategori;
+  document.getElementById('bSatuan').value=b.satuan;
+  document.getElementById('bMin').value=b.stok_min||0;
+  document.getElementById('bStokAwal').value=b.stok_awal||0;
+  document.getElementById('bStok').value=b.stok||0;
+  document.getElementById('bHarga').value=b.harga_avg||0;
+  editId=id;
+  document.getElementById('btnSimpan').textContent='UPDATE BAHAN';
+  document.getElementById('btnBatal').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+window.batal = ()=>{
+  editId=null;
+  document.getElementById('bNama').value='';
+  document.getElementById('bMin').value=5;
+  document.getElementById('bStokAwal').value=0;
+  document.getElementById('bStok').value=0;
+  document.getElementById('bHarga').value=0;
+  document.getElementById('btnSimpan').textContent='+ SIMPAN BAHAN';
+  document.getElementById('btnBatal').style.display='none';
+};
+window.hapus = async(id)=>{
+  if(!confirm('Hapus bahan ini beb?')) return;
+  await remove(ref(db,'inventory_bahan/'+id));
+  await remove(ref(db,'bahan_baku/'+id));
+};
+function render(){
+  document.getElementById('jml').textContent = bahan.length + ' item';
+  document.getElementById('tabel').innerHTML = bahan.map(b=>{
+    const nilai = (b.stok||0)*(b.harga_avg||b.harga||0);
+    return `<tr>
+      <td><b style="text-transform:capitalize">${b.nama}</b></td>
+      <td>${b.stok_awal||0} ${b.satuan||''}</td>
+      <td><b>${b.stok||0} ${b.satuan||''}</b></td>
+      <td>Rp ${(b.harga_avg||b.harga||0).toLocaleString('id-ID')}</td>
+      <td class="nilai">Rp ${Math.round(nilai).toLocaleString('id-ID')}</td>
+      <td><button class="btn btn-edit" onclick="edit('${b.id}')">✎</button> <button class="btn btn-del" onclick="hapus('${b.id}')">🗑</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan=6 style="text-align:center;padding:16px;color:#94a3b8">Belum ada bahan beb</td></tr>`;
+}
+</script>
+</body></html>

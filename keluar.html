@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pengeluaran Bahan</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-500p-3">
+<div class="max-w-[900px] mx-auto">
+
+<div class="border-2 border-red-200 rounded-xl p-4 bg-white">
+  <h2 class="font-bold text-[14px]">📤 Pengeluaran Bahan - Langsung Ngurangin Stok + Masuk Kartu</h2>
+
+  <div class="grid grid-cols-12 gap-2 mt-4">
+    <div class="col-span-3">
+      <label class="text-[10px] font-bold">TANGGAL</label>
+      <input type="date" id="tgl" class="w-full border-2 border-black rounded-lg p-2.5 text-[12px] mt-1">
+    </div>
+    <div class="col-span-5">
+      <label class="text-[10px] font-bold">PILIH BAHAN (4 bahan)</label>
+      <select id="bahan" class="w-full border-2 border-black rounded-lg p-2.5 font-bold text-[12px] mt-1"><option>Loading...</option></select>
+      <div class="text-[11px] mt-1">Stok Sekarang: <b id="stokNow" class="text-green-600">0</b> | Sisa Nanti: <b id="stokSisa" class="text-red-600">0</b></div>
+    </div>
+    <div class="col-span-2">
+      <label class="text-[10px] font-bold">QTY KELUAR</label>
+      <input type="number" id="qty" value="1" class="w-full border-2 border-black rounded-lg p-2.5 text-center font-bold text-[13px] mt-1">
+    </div>
+    <div class="col-span-2">
+      <label class="text-[10px] font-bold">NO BON</label>
+      <div id="noBon" class="border rounded-lg p-2.5 text-[11px] bg-slate-50 font-bold mt-1">BK-</div>
+    </div>
+    <div class="col-span-8">
+      <label class="text-[10px] font-bold">KETERANGAN / KEPERLUAN</label>
+      <input id="ket" placeholder="Contoh: Dipakai produksi, rusak, dll" class="w-full border-2 border-black rounded-lg p-2.5 text-[12px] mt-1">
+    </div>
+    <div class="col-span-4">
+      <button id="btnKeluar" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg text-[13px] mt-[19px]">KELUARKAN - KURANGI STOK + KARTU</button>
+    </div>
+  </div>
+  <div id="log" class="text-[12px] mt-3"></div>
+</div>
+
+<div class="bg-white border rounded-xl p-3 mt-3">
+  <h3 class="font-bold text-[12px]">📋 Daftar Pengeluaran Terbaru <span id="jml" class="bg-red-600 text-white px-2 py-1 rounded-full text-[10px]">0</span></h3>
+  <div class="overflow-x-auto mt-2">
+  <table class="w-full text-[11px]">
+    <thead><tr class="bg-slate-100"><th class="p-2 text-left">Tgl</th><th class="p-2 text-left">Bahan</th><th class="p-2">Qty Keluar</th><th class="p-2 text-left">Keterangan</th><th class="p-2">Aksi</th></tr></thead>
+    <tbody id="tabel"></tbody>
+  </table>
+  </div>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, set, get, update, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const cfg={apiKey:"AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI",authDomain:"restopro2026-60038.firebaseapp.com",databaseURL:"https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"restopro2026-60038"};
+const db=getDatabase(initializeApp(cfg));
+
+let bahanMap={}, allKeluar=[];
+function genBon(){ let n='BK-'+Math.floor(10000+Math.random()*90000); document.getElementById('noBon').textContent=n; return n; }
+let curBon=genBon();
+document.getElementById('tgl').valueAsDate=new Date();
+
+onValue(ref(db,'inventory_bahan'), s=>{
+  bahanMap={}; let sel=document.getElementById('bahan'); sel.innerHTML='';
+  s.forEach(c=>{
+    let v=c.val(); let nama=v.nama||c.key; if(!nama||nama==='Undefined') return;
+    bahanMap[c.key]={id:c.key,nama:nama,stok:Number(v.stok||0)};
+    sel.innerHTML+=`<option value="${c.key}">${nama} - stok ${v.stok||0}</option>`;
+  });
+  updateInfo();
+});
+
+onValue(ref(db,'kartu'), s=>{
+  allKeluar=[]; if(s.exists()) s.forEach(c=>{
+    if(c.key==='0126') return;
+    let v=c.val(); if(Number(v.qtyKeluar||0)>0) allKeluar.push({path:'kartu/'+c.key,...v});
+  });
+  renderList();
+});
+
+function updateInfo(){
+  let id=document.getElementById('bahan').value; let bh=bahanMap[id]; if(!bh) return;
+  let q=parseFloat(document.getElementById('qty').value||0);
+  document.getElementById('stokNow').textContent=bh.stok;
+  document.getElementById('stokSisa').textContent=(bh.stok - q).toFixed(2);
+}
+document.getElementById('bahan').onchange=updateInfo;
+document.getElementById('qty').oninput=updateInfo;
+
+function renderList(){
+  let html=''; allKeluar.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,20).forEach(v=>{
+    html+=`<tr class="border-b">
+      <td class="p-2">${v.tanggal}</td>
+      <td class="p-2 font-bold">${v.bahanNama}</td>
+      <td class="p-2 text-center text-red-600 font-bold">-${v.qtyKeluar}</td>
+      <td class="p-2">${v.keterangan||''}</td>
+      <td class="p-2 text-center"><button data-path="${v.path}" data-bahan="${v.bahanId}" data-qty="${v.qtyKeluar}" class="btnHapus bg-red-600 text-white px-2 py-1 rounded text-[10px]">HAPUS</button></td>
+    </tr>`;
+  });
+  document.getElementById('jml').textContent=allKeluar.length+' keluar';
+  document.getElementById('tabel').innerHTML=html||'<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada pengeluaran</td></tr>';
+  document.querySelectorAll('.btnHapus').forEach(b=>{
+    b.onclick=()=>hapus(b.dataset.path, b.dataset.bahan, b.dataset.qty);
+  });
+}
+
+document.getElementById('btnKeluar').onclick=async()=>{
+  let id=document.getElementById('bahan').value; if(!id) return alert('Pilih bahan!');
+  let qty=parseFloat(document.getElementById('qty').value||0); if(qty<=0) return alert('Qty harus >0');
+  let tgl=document.getElementById('tgl').value; let ket=document.getElementById('ket').value||'Pemakaian';
+  let bh=bahanMap[id];
+
+  let snap=await get(ref(db,'inventory_bahan/'+id));
+  let stokLama=Number(snap.val()?.stok||0);
+  if(stokLama < qty) return alert(`Stok gak cukup beb! Stok ${bh.nama} cuma ${stokLama}, mau keluar ${qty}`);
+  let stokBaru=stokLama - qty;
+
+  // 1. KURANGI BAHAN
+  await update(ref(db,'inventory_bahan/'+id),{stok:stokBaru});
+  // 2. MASUK KARTU SEBAGAI KELUAR
+  await set(push(ref(db,'kartu')),{
+    tanggal:tgl,
+    bahanId:id,
+    bahanNama:bh.nama,
+    noRef:curBon,
+    keterangan:ket,
+    qtyMasuk:0,
+    qtyKeluar:qty,
+    createdAt:Date.now()
+  });
+
+  document.getElementById('log').innerHTML=`<div class="bg-red-100 text-red-700 p-2 rounded font-bold">✅ ${bh.nama} ${stokLama} → ${stokBaru} (-${qty}) Masuk Kartu Keluar!</div>`;
+  curBon=genBon(); document.getElementById('qty').value=1; document.getElementById('ket').value=''; updateInfo();
+};
+
+async function hapus(path,bahanId,qty){
+  if(!confirm(`Hapus pengeluaran ini? Stok ${bahanId} akan balik +${qty}`)) return;
+  let snap=await get(ref(db,'inventory_bahan/'+bahanId));
+  if(snap.exists()){
+    let now=Number(snap.val()?.stok||0);
+    await update(ref(db,'inventory_bahan/'+bahanId),{stok: now + Number(qty||0)});
+  }
+  await remove(ref(db,path));
+}
+</script>
+</body>
+</html>

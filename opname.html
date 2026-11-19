@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Opname</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>body{font-family:Poppins;margin:0;background:#f8fafc}.tabs{display:flex;gap:8px;background:#fff;padding:12px 18px;overflow-x:auto}.tab{padding:8px 13px;border-radius:999px;font-weight:700;font-size:11px;text-decoration:none;color:#000}.tab.active{background:#ec4899;color:#fff;border-color:#000}.container{padding:16px}.card{background:#fff;padding:16px;border-radius:14px;margin-bottom:14px}input{padding:10px;border:1px solid #cbd5e1;border-radius:10px;width:100%}.btn{padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}.btn-biru{background:#3b82f6;color:#fff}.btn-merah{background:#ef4444;color:#fff}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f8fafc;padding:8px;text-align:left}td{padding:8px;border-top:1px solid #f1f5f9}</style>
+</head><body>
+<div class="tabs"><a class="tab" href="index.html">📊 Dashboard</a><a class="tab" href="bahan.html">🥩 Bahan</a><a class="tab" href="supplier.html">🚚 Supplier</a><a class="tab" href="notabeli.html">📥 Nota Beli</a><a class="tab" href="hutang.html">💸 Hutang</a><a class="tab" href="keluar.html">🍳 Keluar</a><a class="tab" href="kartu.html">📇 Kartu</a><a class="tab active" href="opname.html">📝 Opname</a></div>
+<div class="container">
+<div class="card"><h4>Opname Stok</h4><table><thead><tr><th>Bahan</th><th>Sistem</th><th>Fisik</th><th>Aksi</th></tr></thead><tbody id="tabel"></tbody></table></div>
+<div class="card"><table><thead><tr><th>Waktu</th><th>Bahan</th><th>Sistem→Fisik</th><th>Selisih</th><th>Aksi</th></tr></thead><tbody id="riwayat"></tbody></table></div>
+</div>
+<script type="module">
+import { db, ref, push, onValue, remove, update } from "./firebase.js";
+let bahan=[],opname=[];
+onValue(ref(db,'inventory_bahan'), s=>{ bahan=s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[]; render(); });
+onValue(ref(db,'inventory_opname'), s=>{ opname=s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[]; render(); });
+window.simpan=async(id)=>{ let fisik=+document.getElementById('fisik-'+id).value||0; let bh=bahan.find(b=>b.id===id); if(!confirm(`Update ${bh.nama} ${bh.stok} -> ${fisik}?`)) return; await update(ref(db,'inventory_bahan/'+id),{stok:fisik}); let selisih=fisik-(bh.stok||0); await push(ref(db,'inventory_opname'),{bahanId:id,bahanNama:bh.nama,stok_sistem:bh.stok,stok_fisik:fisik,selisih,waktu:new Date().toLocaleString('id-ID'),created:Date.now()}); };
+window.hapus=async(id)=>{ if(!confirm('Hapus?')) return; await remove(ref(db,'inventory_opname/'+id)); };
+function render(){ document.getElementById('tabel').innerHTML=bahan.map(b=>`<tr><td>${b.nama}</td><td>${b.stok}</td><td><input type="number" id="fisik-${b.id}" value="${b.stok}" style="width:80px"></td><td><button class="btn btn-biru" onclick="simpan('${b.id}')">Update</button></td></tr>`).join(''); document.getElementById('riwayat').innerHTML=opname.slice(-20).reverse().map(o=>`<tr><td>${o.waktu}</td><td>${o.bahanNama}</td><td>${o.stok_sistem}→${o.stok_fisik}</td><td style="color:${o.selisih<0?'#ef4444':'#10b981'}">${o.selisih>0?'+':''}${o.selisih}</td><td><button class="btn btn-merah" onclick="hapus('${o.id}')">X</button></td></tr>`).join(''); }
+</script></body></html>

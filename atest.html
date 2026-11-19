@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>RESTOPRO - Kasir PENJUALAN CASH</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Poppins';margin:0;background:#f8fafc;color:#1e293b}
+.container{padding:20px;display:block}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+/* KIRI BOLEH SCROLL, KANAN DIPAKSA DIEM PAKE FIXED */
+.kolom-kiri{width:calc(66.666% - 10px);display:flex;flex-direction:column;gap:20px}
+.card-keranjang{
+  position:fixed !important;
+  top:20px !important;
+  right:20px !important;
+  width:calc(33.333% - 27px) !important;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  z-index:99;
+}
+.header-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:20px}
+.header-form label{font-size:12px;color:#64748b;margin-bottom:6px;display:block;font-weight:600;text-transform:uppercase}
+.header-form select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:'Poppins'}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:15px}
+.menu-card{border:1px solid #e2e8f0;border-radius:10px;text-align:center;padding:10px;cursor:pointer;transition:0.2s}
+.menu-card:hover{border-color:#f97316;transform:translateY(-2px)}
+.menu-card img{width:100%;height:120px;object-fit:cover;border-radius:8px}
+.menu-card h4{margin:10px 0 5px 0;font-size:14px;font-weight:600}
+.menu-card p{margin:0;color:#2563eb;font-weight:700}
+.meja-aktif-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px}
+.meja-card{border:2px solid #fb923c;border-radius:10px;padding:14px;background:#fff7ed}
+.meja-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.meja-nama{font-weight:700;font-size:15px;color:#9a3412}
+.meja-waktu{font-size:12px;color:#7c2d12;display:flex;align-items:center;gap:5px;margin-top:3px}
+.meja-badge{background:#1e293b;color:#fff;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700}
+.meja-divider{margin:10px 0;border-top:1px dashed #fed7aa}
+.meja-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#7c2d12}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.rincian div{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}
+.rincian.total{font-weight:800;font-size:18px;color:#f97316;border-top:1px solid #e2e8f0;padding-top:10px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-top:10px;font-family:'Poppins'}
+.btn-orange{background:#f97316;color:#fff}.btn-hijau{background:#10b981;color:#fff}.btn-biru{background:#3b82f6;color:#fff}
+.btn-clean{background:#ef4444;color:#fff;padding:6px 12px;font-size:11px;border-radius:20px;border:none;cursor:pointer;margin-left:10px}
+input,select{padding:10px;border:1px solid #cbd5e1;border-radius:8px;width:100%;box-sizing:border-box;font-family:'Poppins'}
+label{font-size:12px;color:#64748b;margin-bottom:6px;display:block;font-weight:600;text-transform:uppercase}
+option:disabled{background:#fee2e2;color:#b91c1c;font-weight:700}
+/* BIAR DI HP TETEP NORMAL, GAK FIXED */
+@media(max-width:900px){
+  .kolom-kiri{width:100%}
+  .card-keranjang{position:relative !important;top:auto !important;right:auto !important;width:100% !important;max-height:none;margin-top:20px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="kolom-kiri">
+<div class="card">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+<h3 style="margin:0;">Kelola Kasir</h3>
+<button class="btn-clean" onclick="bersihkanSampah()">🗑️ Bersihkan Meja Sampah</button>
+</div>
+<div id="debugInfo" style="background:#dcfce7;padding:8px;border-radius:6px;font-size:11px;margin:10px 0;display:none"></div>
+<div class="header-form" style="margin-top:15px">
+<div><label>Pilih Meja</label><select id="selectMeja"><option value="">-- Pilih Meja --</option></select></div>
+<div><label>Petugas Kasir</label><select id="selectKasir"></select></div>
+<div><label>Pilih Waitress</label><select id="selectWaitress"><option>Junior</option><option>Senior</option></select></div>
+</div>
+<h3>Daftar Menu</h3>
+<div class="menu-grid" id="menuGrid"></div>
+</div>
+<div class="card">
+<h3><i class="fa-solid fa-thumbtack" style="color:#ef4444;"></i> Daftar Meja Aktif</h3>
+<div id="mejaAktif" class="meja-aktif-grid"></div>
+</div>
+</div>
+<div class="card card-keranjang">
+<h3 style="margin-top:0;"><i class="fa-solid fa-cart-shopping"></i> Keranjang ( <span id="namaMejaKeranjang">Belum Pilih</span> )</h3>
+<div id="orderList"><i>Belum ada pesanan</i></div>
+<hr style="border:none;border-top:1px solid #e2e8f0;margin:15px 0;">
+<div class="input-row">
+<div><label>Tipe Diskon</label><select id="tipeDiskon"><option value="Persen">Persen (%)</option><option value="Rp">Rp</option></select></div>
+<div><label>Nilai Diskon</label><input type="number" id="nilaiDiskon" value="0"></div>
+</div>
+<div><label>Metode Pembayaran</label>
+<select id="metodeBayar">
+  <option value="CASH">💵 CASH</option>
+  <option value="QRIS">📱 QRIS</option>
+  <option value="KARTU_KREDIT">💳 Kartu Kredit / Debit</option>
+  <option value="TRANSFER">🏦 Transfer Bank</option>
+  <option value="SIGN">✍️ SIGN / BON</option>
+</select>
+</div>
+<div id="extraBayar" style="margin-top:10px; display:none">
+  <label id="labelExtra">No. Referensi</label>
+  <input type="text" id="refBayar" placeholder="Isi referensi">
+</div>
+<div class="input-row" style="margin-top:12px;">
+<div><label>Nominal Uang (CASH)</label><input type="number" id="uangBayar" value="0"></div>
+<div><label>Kembalian</label><div style="font-weight:800;color:#10b981;font-size:18px;padding-top:8px;" id="kembalian">Rp 0</div></div>
+</div>
+<div class="rincian">
+<div><span>Subtotal</span> <span id="subtotal">Rp 0</span></div>
+<div><span>Potongan</span> <span id="potongan">Rp 0</span></div>
+<div><span>PPN (<span id="labelPPN">11</span>%)</span> <span id="ppn">Rp 0</span></div>
+<div class="rincian total"><span>TOTAL AKHIR</span> <span id="totalAkhir">Rp 0</span></div>
+</div>
+<button class="btn btn-orange" onclick="tahanMeja()"><i class="fa-solid fa-hourglass-half"></i> Tahan Meja</button>
+<button class="btn btn-hijau" onclick="bayar()"><i class="fa-solid fa-receipt"></i> Proses Bayar</button>
+<button class="btn btn-biru" onclick="resetKeranjang()"><i class="fa-solid fa-rotate-right"></i> RESET</button>
+</div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const firebaseConfig = {apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQZt0XJtHQj15iI", authDomain: "restopro2026-60038.firebaseapp.com", databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "restopro2026-60038"};
+const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+let userLogin = JSON.parse(localStorage.getItem("userLogin")) || {nama:"Natasya"};
+let menuData=[]; let mejaData=[]; let userData=[]; let konfigurasi={ppn:11,bill:"BILL-0001",nama:"RestoPro"};
+let mejaTertahanData={}; let keranjang=[]; let mejaAktifSekarang=null;
+onValue(ref(db,'menu'), s=>{ menuData = s.val()? Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})) : []; renderMenu(); });
+onValue(ref(db,'meja'), s=>{
+  let raw = s.val() || {};
+  mejaData = Object.keys(raw).map(k=>{
+    let v = raw[k] || {};
+    let nomor = v.nomor || v.nama || v.nomorMeja || k;
+    nomor = String(nomor).trim().toUpperCase().replace(/\s+/g,'_');
+    if(!nomor || nomor==='UNDEFINED' || k.startsWith('-') || nomor.startsWith('-P')) return null;
+    return { id:k, nomorMeja:nomor, kapasitas:v.kapasitas||4 };
+  }).filter(Boolean);
+  let dbg = document.getElementById('debugInfo'); dbg.style.display='block';
+  dbg.innerHTML = `✅ Meja bersih: ${mejaData.map(m=>m.nomorMeja.replace(/_/g,' ')).join(', ') || 'belum ada'}`;
+  loadAwal();
+});
+onValue(ref(db,'users'), s=>{ userData = s.val()? Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})) : []; loadAwal(); });
+onValue(ref(db,'konfigurasi'), s=>{ konfigurasi = s.val() || konfigurasi; document.getElementById('labelPPN').textContent = konfigurasi.ppn || 11; });
+onValue(ref(db,'mejaTertahan'), s=>{ mejaTertahanData = s.val() || {}; loadAwal(); });
+function loadAwal(){ renderDropdownMeja(); document.getElementById('selectKasir').innerHTML = userData.filter(u=>u.role=="Kasir" || u.role=="Admin/Owner").map(u=>`<option>${u.nama}</option>`).join("") || `<option>${userLogin.nama}</option>`; renderMejaAktif(); hitungTotal(); }
+function renderDropdownMeja(){
+  let bersih = mejaData.filter(m => m.nomorMeja && m.nomorMeja!=='UNDEFINED');
+  if(bersih.length===0){ document.getElementById('selectMeja').innerHTML='<option value="">-- Belum ada meja --</option>'; return; }
+  document.getElementById('selectMeja').innerHTML='<option value="">-- Pilih Meja --</option>' + bersih.map(m=>{
+    let t=mejaTertahanData[m.nomorMeja];
+    if(t) return `<option value="${m.nomorMeja}" disabled>${m.nomorMeja.replace(/_/g,' ')} - TERPAKAI Rp ${Math.round(t.total).toLocaleString("id-ID")}</option>`;
+    else return `<option value="${m.nomorMeja}">${m.nomorMeja.replace(/_/g,' ')}</option>`;
+  }).join('');
+}
+function renderMenu(){ document.getElementById('menuGrid').innerHTML = menuData.map(m=>`<div class="menu-card" onclick="tambahKeranjang('${m.id}')"><img src="${m.gambar}"><h4>${m.nama}</h4><p>Rp ${m.harga.toLocaleString("id-ID")}</p></div>`).join(''); }
+document.getElementById('selectMeja').addEventListener("change", ()=>{
+  let val = document.getElementById('selectMeja').value;
+  if(!val || val==='undefined' || val==='UNDEFINED'){ mejaAktifSekarang=null; document.getElementById('namaMejaKeranjang').textContent="Belum Pilih"; keranjang=[]; renderKeranjang(); return; }
+  mejaAktifSekarang = val; document.getElementById('namaMejaKeranjang').textContent = val.replace(/_/g,' '); keranjang = mejaTertahanData[val]?.items || []; renderKeranjang();
+});
+window.tambahKeranjang = function(id){ if(!mejaAktifSekarang) return alert("Pilih meja dulu beb!"); let menu=menuData.find(m=>m.id==id); let item=keranjang.find(k=>k.id==id); if(item) item.qty++; else keranjang.push({...menu,qty:1}); renderKeranjang(); }
+function renderKeranjang(){ if(keranjang.length==0){ document.getElementById('orderList').innerHTML="<i>Belum ada pesanan</i>"; } else { document.getElementById('orderList').innerHTML = keranjang.map(k=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #e2e8f0"><span>${k.nama} x${k.qty}</span><b>Rp ${(k.harga*k.qty).toLocaleString("id-ID")}</b></div>`).join(''); } hitungTotal(); }
+function hitungTotal(){
+  let subtotalVal = keranjang.reduce((a,b)=>a + (b.harga * b.qty), 0);
+  let tipe = document.getElementById('tipeDiskon').value;
+  let nilai = parseFloat(document.getElementById('nilaiDiskon').value) || 0;
+  let potonganVal = (tipe==='Persen')? subtotalVal * (nilai/100) : nilai;
+  let ppnPersen = parseFloat(konfigurasi.ppn) || 11;
+  let ppnVal = (subtotalVal - potonganVal) * (ppnPersen/100);
+  let totalVal = subtotalVal - potonganVal + ppnVal;
+  let uang = parseFloat(document.getElementById('uangBayar').value) || 0;
+  let kembaliVal = uang - totalVal;
+  document.getElementById('subtotal').textContent = "Rp " + subtotalVal.toLocaleString("id-ID");
+  document.getElementById('potongan').textContent = "Rp " + potonganVal.toLocaleString("id-ID");
+  document.getElementById('ppn').textContent = "Rp " + Math.round(ppnVal).toLocaleString("id-ID");
+  document.getElementById('totalAkhir').textContent = "Rp " + Math.round(totalVal).toLocaleString("id-ID");
+  document.getElementById('kembalian').textContent = "Rp " + (kembaliVal>0? Math.round(kembaliVal).toLocaleString("id-ID") : "0");
+  return totalVal;
+}
+['nilaiDiskon','tipeDiskon','uangBayar'].forEach(id=>{ document.getElementById(id).addEventListener('input', hitungTotal); document.getElementById(id).addEventListener('change', hitungTotal); });
+document.getElementById('metodeBayar').addEventListener('change', ()=>{
+  let m = document.getElementById('metodeBayar').value; let extra = document.getElementById('extraBayar'); let label = document.getElementById('labelExtra'); let refInput = document.getElementById('refBayar');
+  if(m==='KARTU_KREDIT'){ extra.style.display='block'; label.textContent='No. Kartu / Approval Code'; refInput.placeholder='Contoh: 4 digit terakhir / Approval BCA'; }
+  else if(m==='TRANSFER'){ extra.style.display='block'; label.textContent='Bank / No. Referensi Transfer'; refInput.placeholder='Contoh: BCA - TRF12345'; }
+  else if(m==='SIGN'){ extra.style.display='block'; label.textContent='Nama yang SIGN / BON'; refInput.placeholder='Contoh: Pak Owner / Karyawan Dapur'; }
+  else { extra.style.display='none'; refInput.value=''; }
+  hitungTotal();
+});
+function cetakBill(transaksi){
+  let listItem = transaksi.items.map(item => `<div style="display:flex; justify-content:space-between; padding:4px 0;"><span>${item.qty}x ${item.nama}</span><span>Rp ${(item.harga * item.qty).toLocaleString('id-ID')}</span></div>`).join('');
+  let billHTML = `<html><head><title>NOTA ${transaksi.id}</title><style>body{width:80mm; font-family:'Courier New', monospace; font-size:12px; padding:10px; margin:0} h2{text-align:center; margin:0} p{margin:2px 0} hr{border:none; border-top:1px dashed #000; margin:8px 0}.center{text-align:center}.total{display:flex; justify-content:space-between; font-weight:bold; font-size:14px;}</style></head><body><h2>${(konfigurasi.nama||'RESTOPRO').toUpperCase()}</h2><div class="center">Jl. Raya Resto<br>Telp: 0812-3456-7890</div><hr><p>No Bill : ${transaksi.id}</p><p>Tanggal : ${transaksi.waktu}</p><p>Meja : ${transaksi.meja.replace(/_/g,' ')} | Kasir: ${transaksi.kasir}</p><p>Waitress: ${transaksi.waitress}</p><p>Metode: ${transaksi.metode} ${transaksi.referensi? ' - '+transaksi.referensi : ''}</p><hr>${listItem}<hr><div class="total"><span>TOTAL</span><span>Rp ${Math.round(transaksi.total).toLocaleString("id-ID")}</span></div>${transaksi.metode==='CASH'? `<p>Uang: Rp ${transaksi.uangBayar.toLocaleString("id-ID")}</p><p>Kembali: Rp ${Math.round(transaksi.kembalian).toLocaleString("id-ID")}</p>` : ''}<hr><div class="center">TERIMA KASIH<br>Selamat Menikmati!</div></body></html>`;
+  let iframe = document.createElement('iframe'); iframe.style.position='fixed'; iframe.style.right='0'; iframe.style.bottom='0'; iframe.style.width='0'; iframe.style.height='0'; iframe.style.border='0'; document.body.appendChild(iframe);
+  let doc = iframe.contentWindow.document; doc.open(); doc.write(billHTML); doc.close(); iframe.contentWindow.focus(); iframe.contentWindow.print();
+  setTimeout(()=>{ document.body.removeChild(iframe); }, 2000);
+  let nextNomor = parseInt((konfigurasi.bill||'BILL-0001').split('-')[1]) + 1; konfigurasi.bill = `BILL-${String(nextNomor).padStart(4,'0')}`; set(ref(db, 'konfigurasi'), konfigurasi);
+}
+window.bersihkanSampah = async function(){ let snap = await get(ref(db,'meja')); let data = snap.val() || {}; let hapus=0; for(let k of Object.keys(data)){ let v=data[k]||{}; let nomor=v.nomor||v.nama||v.nomorMeja||""; if(k.startsWith('-') || String(nomor).toLowerCase()==='undefined' || String(nomor).trim()===''){ await remove(ref(db,'meja/'+k)); hapus++; } } alert(`✅ ${hapus} sampah terhapus beb!`); }
+window.tahanMeja = function(){ if(!mejaAktifSekarang || keranjang.length==0) return alert("Pilih meja & menu dulu beb!"); let total=hitungTotal(); let data={ meja:mejaAktifSekarang, items:keranjang, total:total, waktuMulai:new Date().toLocaleString("id-ID"), orderId:'MANUAL-'+Date.now() }; set(ref(db,'mejaTertahan/'+mejaAktifSekarang), data).then(()=>{ alert(`✅ Meja ${mejaAktifSekarang.replace(/_/g,' ')} ditahan!`); resetKeranjang(); }); }
+window.bayar = async function(){
+  if(!mejaAktifSekarang || keranjang.length==0) return alert("Pilih meja dulu beb!");
+  let total=hitungTotal(); let metode=document.getElementById('metodeBayar').value; let uang=parseFloat(document.getElementById('uangBayar').value)||0; let refB = document.getElementById('refBayar')?.value || "";
+  if(metode==='CASH'){ if(uang<=0) return alert("❌ Nominal Uang Wajib Diisi!"); if(uang < total) return alert(`❌ Uang Kurang! Total Rp ${Math.round(total).toLocaleString("id-ID")}`); }
+  if(metode==='KARTU_KREDIT' &&!refB) return alert("❌ Isi No. Kartu!");
+  if(metode==='TRANSFER' &&!refB) return alert("❌ Isi No. Referensi!");
+  if(metode==='SIGN' &&!refB) return alert("❌ Isi Nama SIGN/BON!");
+  let transaksi={ id:konfigurasi.bill, tanggal:new Date().toISOString().split('T')[0], waktu:new Date().toLocaleString("id-ID"), meja:mejaAktifSekarang, kasir:document.getElementById('selectKasir').value, waitress:document.getElementById('selectWaitress').value, items:keranjang, total:Math.round(total), metode:metode, referensi:refB, uangBayar:(metode==='CASH'? uang : Math.round(total)), kembalian:(metode==='CASH'? Math.round(uang-total) : 0), created:Date.now() };
+  await push(ref(db,'transaksi'), transaksi);
+  if(metode==='CASH'){
+    let dataPetty = {
+      tanggal: transaksi.tanggal,
+      waktu: transaksi.waktu,
+      tipe: "PENJUALAN CASH",
+      keterangan: `Penjualan CASH ${transaksi.id} Meja ${mejaAktifSekarang.replace(/_/g,' ')}`,
+      nominal: Math.round(total),
+      user: transaksi.kasir,
+      bill: transaksi.id,
+      sumber: "KASIR",
+      created: Date.now()
+    };
+    await push(ref(db,'pettycash'), dataPetty);
+  }
+  cetakBill(transaksi); await remove(ref(db,'mejaTertahan/'+mejaAktifSekarang));
+  alert(`✅ ${transaksi.id} Berhasil! PENJUALAN CASH Rp ${Math.round(total).toLocaleString("id-ID")}`);
+  resetKeranjang(); document.getElementById('extraBayar').style.display='none'; document.getElementById('refBayar').value='';
+}
+window.resetKeranjang = function(){ keranjang=[]; mejaAktifSekarang=null; document.getElementById('selectMeja').value=""; document.getElementById('namaMejaKeranjang').textContent="Belum Pilih"; document.getElementById('nilaiDiskon').value=0; document.getElementById('uangBayar').value=0; renderKeranjang(); }
+function renderMejaAktif(){ let data=Object.values(mejaTertahanData); document.getElementById('mejaAktif').innerHTML = data.length==0? `<p style="text-align:center;color:#64748b">Tidak ada meja aktif</p>` : data.map(p=>`<div class="meja-card"><div class="meja-top"><div><div class="meja-nama">Meja ${p.meja.replace(/_/g,' ')} - ${p.items.reduce((a,b)=>a+b.qty,0)} Item</div><div class="meja-waktu">${p.waktuMulai}</div></div><div class="meja-badge">Rp ${Math.round(p.total).toLocaleString("id-ID")}</div></div><div class="meja-divider"></div>${p.items.map(i=>`<div class="meja-row"><span>${i.nama}</span><span>x${i.qty}</span></div>`).join('')}<button class="btn btn-biru" style="margin-top:8px" onclick="bukaMeja('${p.meja}')">LANJUTKAN PESAN</button></div>`).join(''); }
+window.bukaMeja = function(nama){ keranjang=mejaTertahanData[nama]?.items||[]; mejaAktifSekarang=nama; document.getElementById('selectMeja').value=nama; document.getElementById('namaMejaKeranjang').textContent=nama.replace(/_/g,' '); renderKeranjang(); window.scrollTo({top:0,behavior:'smooth'}); }
+</script>
+</body>
+</html>

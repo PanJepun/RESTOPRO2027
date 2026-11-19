@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>RESTOPRO - Login</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif;}
+body{background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column;}
+.login-box{background: rgba(43, 23, 27, 0.8); backdrop-filter: blur(20px); padding:40px; border-radius:20px; width:420px; box-shadow:0 10px 40px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);}
+.logo{text-align:center; margin-bottom:25px;}
+.logo h1{color:#f97316; font-size:28px; font-weight:800;}
+.logo p{color:#94a3b8; font-size:13px;}
+.input-group{margin-bottom:18px;}
+.input-group label{display:block; color:#cbd5e1; font-size:12px; font-weight:600; margin-bottom:8px;}
+.input-group select,.input-group input{width:100%; padding:12px 15px; background:#334155; border:1px solid #475569; border-radius:10px; color:#fff; font-size:14px; outline:none;}
+.input-group select:focus,.input-group input:focus{border-color:#f97316;}
+.btn-login{width:100%; padding:14px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border:none; border-radius:10px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;}
+.btn-master{background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);}
+.divider{display:flex; align-items:center; margin:20px 0; color:#64748b; font-size:12px;}
+.divider::before,.divider::after{content:''; flex:1; height:1px; background:rgba(255,255,255,0.1);}
+.backup-bar{width:420px; max-width:92vw; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; font-size:12px; padding:10px 14px; border-radius:12px; margin-bottom:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;}
+.backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px;}
+.backup-bar button.sec{background:#334155;}
+</style>
+</head>
+<body>
+<div class="backup-bar">
+  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
+  <span style="display:flex;gap:6px">
+    <button onclick="backupSekarang('manual')">Backup</button>
+    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
+  </span>
+  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+</div>
+<div class="login-box">
+  <div class="logo"><h1><i class="fa-solid fa-utensils"></i> RESTOPRO</h1><p>Sistem Kasir Restoran Premium</p></div>
+  <div class="input-group"><label>PILIH USER</label><select id="selectUser"><option value="">-- Pilih Nama Anda --</option></select></div>
+  <div class="input-group"><label>PASSWORD</label><input type="password" id="userPass" placeholder="Masukkan Password"></div>
+  <button class="btn-login" onclick="loginUser()"><i class="fa-solid fa-right-to-bracket"></i> LOGIN</button>
+  <div class="divider">ATAU MASTER KEY</div>
+  <div class="input-group"><label>MASTER KEY</label><input type="text" id="masterKey" placeholder="Masukkan Master Key"></div>
+  <div class="input-group"><label>PASSWORD</label><input type="password" id="masterPass" placeholder="Masukkan Password"></div>
+  <button class="btn-login btn-master" onclick="loginMaster()"><i class="fa-solid fa-crown"></i> LOGIN MASTER KEY</button>
+</div>
+<script>
+  const KEY_DATA = 'restopro_data_v1';
+  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
+  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
+  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+  function loadData(){ let raw = localStorage.getItem(KEY_DATA); if(!raw){ let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], inventory:[] }; localStorage.setItem(KEY_DATA, JSON.stringify(awal)); return awal; } return JSON.parse(raw); }
+  function cekBackupHarian(){
+    let tgl = tanggalHariIni();
+    if(sessionStorage.getItem('backupSudahJalanHariIni') === tgl){ document.getElementById('statusBackup').textContent = '✅ Backup Hari Ini Sudah Ada'; return true; }
+    let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
+    if(log[tgl]){ sessionStorage.setItem('backupSudahJalanHariIni', tgl); el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; return true; }
+    else { el.textContent = '⏳ Belum Ada Backup, Backup Dulu...'; sessionStorage.setItem('backupSudahJalanHariIni', tgl); backupSekarang('auto-pagi'); return false; }
+  }
+  function backupSekarang(mode){
+    let data = loadData(); let userLogin = localStorage.getItem('userLogin'); let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
+    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
+    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+  }
+  function restoreFile(e){ let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(){ try{ let data = JSON.parse(reader.result); if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin)); localStorage.setItem(KEY_DATA, JSON.stringify(data)); alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!'); location.reload(); }catch(err){ alert('File backup rusak beb!'); } }; reader.readAsText(file); }
+  window.addEventListener('DOMContentLoaded', function(){ loadData(); cekBackupHarian(); });
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getDatabase, ref, get, child, push } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+  const firebaseConfig = { apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQZt0XJtHQj15iI", authDomain: "restopro2026-60038.firebaseapp.com", databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "restopro2026-60038" };
+  const app = initializeApp(firebaseConfig); const db = getDatabase(app);
+  const MASTER_KEY = "mid241195"; const MASTER_PASS = "19032014";
+  const dbRef = ref(db);
+  const elSelectUser = document.getElementById('selectUser');
+  get(child(dbRef, `users`)).then((snapshot) => { if (snapshot.exists()) { let users = []; snapshot.forEach((childSnapshot) => { users.push(childSnapshot.val()); }); elSelectUser.innerHTML = `<option value="">-- Pilih Nama Anda --</option>`; elSelectUser.innerHTML += users.map(u=>`<option value='${JSON.stringify(u)}'>${u.nama} - ${u.role}</option>`).join(""); } else { elSelectUser.innerHTML = `<option value="">-- Belum ada user. Tambah di Tools --</option>`; } });
+  window.loginUser = function(){ const sel = document.getElementById('selectUser'); if(!sel.value) return alert("Pilih user dulu!"); let pass = document.getElementById('userPass').value.trim(); let user = JSON.parse(sel.value); if(user.password === pass){ localStorage.setItem("userLogin", JSON.stringify({nama: user.nama, role: user.role})); const logRef = ref(db, 'logs/' + new Date().toISOString().split('T')[0]); push(logRef, { nama: user.nama, role: user.role, waktu: new Date().toLocaleString("id-ID"), aksi: "Login" }); alert("✅ Login Berhasil! Selamat datang " + user.nama); window.location.href = "menuutama.html"; } else { alert("❌ Password Salah!"); document.getElementById('userPass').value = ""; } }
+  window.loginMaster = function(){ let key = document.getElementById('masterKey').value.trim(); let pass = document.getElementById('masterPass').value.trim(); if(key === MASTER_KEY && pass === MASTER_PASS){ let masterUser = {nama: "Pan Jepun", role: "Admin/Owner"}; localStorage.setItem("userLogin", JSON.stringify(masterUser)); alert("✅ Login Master Key Berhasil!"); window.location.href = "dashboard.html"; } else { alert("❌ Master Key atau Password Salah!"); } }
+</script>
+</body>
+</html>

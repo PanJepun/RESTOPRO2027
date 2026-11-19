@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pembelian - Filter Periode + Cetak</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@media print {
+.no-print { display:none!important; }
+.print-area { border:none!important; }
+@page { margin: 10mm; }
+}
+.compact-table { width:100%; border-collapse:collapse; }
+.compact-table th { background:#111; color:#fff; padding:7px 10px; font-size:11px; text-align:left; border:none; }
+.compact-table td { padding:5px 10px; font-size:11px; border:none; border-bottom:1px solid #f1f5f9; }
+</style>
+</head>
+<body class="bg-[#f8fafc] p-3">
+<div class="max-w-[1050px] mx-auto">
+
+<div class="no-print bg-white border border-green-200 rounded-xl p-4">
+  <h2 class="font-bold text-[13px]">📥 Pembelian Bahan - Nambah Stok + Masuk Kartu</h2>
+  <div class="grid grid-cols-12 gap-2 mt-3">
+    <div class="col-span-3"><label class="text-[9px] font-bold">TANGGAL</label><input type="date" id="tgl" class="w-full border rounded-lg p-2 text-[12px] mt-1"></div>
+    <div class="col-span-4"><label class="text-[9px] font-bold">PILIH BAHAN</label><select id="bahan" class="w-full border rounded-lg p-2 font-bold text-[12px] mt-1"><option>Loading...</option></select><div class="text-[10px] mt-1">Stok: <b id="stokNow">0</b> → <b id="stokJadi" class="text-green-600">0</b></div></div>
+    <div class="col-span-2"><label class="text-[9px] font-bold">QTY MASUK</label><input type="number" id="qty" value="1" class="w-full border rounded-lg p-2 text-center font-bold mt-1"></div>
+    <div class="col-span-3"><label class="text-[9px] font-bold">NO NOTA</label><div id="noNota" class="border rounded-lg p-2 text-[11px] bg-slate-50 font-bold mt-1">PB-</div></div>
+    <div class="col-span-4"><label class="text-[9px] font-bold">SUPPLIER</label><input id="supplier" value="Supplier Utama" class="w-full border rounded-lg p-2 text-[12px] mt-1"></div>
+    <div class="col-span-4"><label class="text-[9px] font-bold">KETERANGAN</label><input id="ket" placeholder="Pembelian..." class="w-full border rounded-lg p-2 text-[12px] mt-1"></div>
+    <div class="col-span-4"><button id="btnMasuk" class="w-full bg-green-600 text-white font-bold py-2.5 rounded-lg text-[12px] mt-[17px]">SIMPAN MASUK + KARTU</button></div>
+  </div>
+  <div id="log" class="text-[11px] mt-2"></div>
+</div>
+
+<div id="printArea" class="print-area bg-white rounded-xl p-4 mt-3 border">
+  <div class="flex justify-between items-start">
+    <div>
+      <h2 class="font-bold text-[14px]">LAPORAN PEMBELIAN BAHAN</h2>
+      <p class="text-[10px] text-slate-500">Periode: <b id="labelPeriode">Semua Tanggal</b> | Dicetak: <span id="tglCetak"></span> | <span id="jmlPrint">0 transaksi</span></p>
+    </div>
+    <div class="no-print flex gap-2">
+      <button id="btnPreview" class="bg-slate-700 text-white px-3 py-1.5 rounded text-[10px] font-bold">👁️ PREVIEW</button>
+      <button id="btnCetak" class="bg-black text-white px-3 py-1.5 rounded text-[10px] font-bold">🖨️ CETAK / PDF</button>
+    </div>
+  </div>
+
+  <!-- FILTER PERIODE TANGGAL -->
+  <div class="no-print bg-slate-50 border rounded-lg p-3 mt-3 grid grid-cols-12 gap-2 items-end">
+    <div class="col-span-3"><label class="text-[9px] font-bold">DARI TANGGAL</label><input type="date" id="filterDari" class="w-full border rounded-lg p-2 text-[11px] mt-1"></div>
+    <div class="col-span-3"><label class="text-[9px] font-bold">SAMPAI TANGGAL</label><input type="date" id="filterSampai" class="w-full border rounded-lg p-2 text-[11px] mt-1"></div>
+    <div class="col-span-3"><input id="cari" placeholder="Cari bahan / nota..." class="w-full border rounded-full px-3 py-2 text-[10px]"></div>
+    <div class="col-span-3 flex gap-1">
+      <button id="btnFilter" class="flex-1 bg-black text-white py-2 rounded-lg text-[10px] font-bold">FILTER</button>
+      <button id="btnReset" class="flex-1 bg-white border py-2 rounded-lg text-[10px] font-bold">RESET</button>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center mt-3">
+    <h3 class="font-bold text-[11px]">📋 Daftar Pembelian <span id="jml" class="bg-green-600 text-white px-2 py-0.5 rounded-full text-[10px]">0</span></h3>
+    <div class="text-[10px]">Total Masuk: <b class="text-green-600">+<span id="totalQty">0</span></b></div>
+  </div>
+
+  <div class="overflow-x-auto mt-2">
+  <table class="compact-table">
+    <thead><tr>
+      <th>Tanggal</th><th>No Nota</th><th>Bahan</th><th style="text-align:center">Masuk</th><th>Supplier / Keterangan</th><th class="no-print" style="text-align:center">Aksi</th>
+    </tr></thead>
+    <tbody id="tabel"></tbody>
+  </table>
+  </div>
+</div>
+
+<div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-xl p-3 w-full max-w-[1000px] max-h-[90vh] overflow-auto">
+    <div class="flex justify-between mb-2 no-print"><h3 class="font-bold text-[12px]">Preview Periode: <span id="previewPeriode"></span></h3><button id="closeModal" class="bg-red-600 text-white px-3 py-1 rounded text-[10px]">TUTUP</button></div>
+    <div id="previewContent"></div>
+    <button id="cetakDariPreview" class="no-print w-full bg-black text-white py-2.5 rounded-lg mt-3 font-bold text-[11px]">🖨️ CETAK SEKARANG</button>
+  </div>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, set, get, update, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const cfg={apiKey:"AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI",authDomain:"restopro2026-60038.firebaseapp.com",databaseURL:"https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"restopro2026-60038"};
+const db=getDatabase(initializeApp(cfg));
+
+let bahanMap={}, partA=[];
+function genNota(){ let n='PB-'+Math.floor(10000+Math.random()*90000); document.getElementById('noNota').textContent=n; return n; }
+let curNota=genNota();
+let now=new Date();
+document.getElementById('tgl').valueAsDate=now;
+document.getElementById('tglCetak').textContent=now.toLocaleString('id-ID');
+
+onValue(ref(db,'inventory_bahan'), s=>{
+  bahanMap={}; let sel=document.getElementById('bahan'); sel.innerHTML='';
+  s.forEach(c=>{ let v=c.val(); let nama=v.nama||c.key; if(!nama||nama==='Undefined') return; bahanMap[c.key]={id:c.key,nama:nama,stok:Number(v.stok||0)}; sel.innerHTML+=`<option value="${c.key}">${nama} (stok ${v.stok||0})</option>`; });
+  updateInfo();
+});
+
+onValue(ref(db,'kartu'), s=>{
+  partA=[]; if(s.exists()) s.forEach(c=>{ if(c.key==='0126'||c.key==='0226') return; let v=c.val(); if(v?.bahanId && Number(v.qtyMasuk||0)>0) partA.push({path:'kartu/'+c.key,...v}); });
+  onValue(ref(db,'kartu/0126'), s2=>{ if(s2.exists()) s2.forEach(c=>{ let v=c.val(); if(Number(v.qtyMasuk||0)>0) partA.push({path:'kartu/0126/'+c.key,...v}); }); render(); }, {onlyOnce:true});
+  render();
+});
+
+function updateInfo(){
+  let id=document.getElementById('bahan').value; let bh=bahanMap[id]; if(!bh) return;
+  let q=parseFloat(document.getElementById('qty').value||0);
+  document.getElementById('stokNow').textContent=bh.stok;
+  document.getElementById('stokJadi').textContent=(bh.stok+q).toFixed(2);
+}
+document.getElementById('bahan').onchange=updateInfo;
+document.getElementById('qty').oninput=updateInfo;
+document.getElementById('cari').oninput=render;
+document.getElementById('btnFilter').onclick=render;
+document.getElementById('filterDari').onchange=render;
+document.getElementById('filterSampai').onchange=render;
+
+document.getElementById('btnReset').onclick=()=>{
+  document.getElementById('filterDari').value='';
+  document.getElementById('filterSampai').value='';
+  document.getElementById('cari').value='';
+  render();
+};
+
+function render(){
+  let cari=(document.getElementById('cari').value||'').toLowerCase();
+  let dari=document.getElementById('filterDari').value;
+  let sampai=document.getElementById('filterSampai').value;
+
+  let label='Semua Tanggal';
+  if(dari && sampai) label=`${dari} s/d ${sampai}`;
+  else if(dari) label=`Dari ${dari}`;
+  else if(sampai) label=`Sampai ${sampai}`;
+  document.getElementById('labelPeriode').textContent=label;
+
+  let filtered=partA.filter(t=>{
+    let okCari=(t.bahanNama||'').toLowerCase().includes(cari) || (t.noRef||'').toLowerCase().includes(cari);
+    if(!okCari) return false;
+    if(dari && (t.tanggal||'') < dari) return false;
+    if(sampai && (t.tanggal||'') > sampai) return false;
+    return true;
+  });
+  filtered.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  document.getElementById('jml').textContent=filtered.length+' transaksi';
+  document.getElementById('jmlPrint').textContent=filtered.length+' transaksi';
+  let totalQty=0; filtered.forEach(t=> totalQty+=Number(t.qtyMasuk||0));
+  document.getElementById('totalQty').textContent=totalQty;
+
+  let html='';
+  filtered.forEach(tr=>{
+    html+=`<tr>
+      <td>${tr.tanggal||''}</td>
+      <td style="font-weight:700">${tr.noRef||''}</td>
+      <td style="font-weight:700">${tr.bahanNama||''}</td>
+      <td style="text-align:center;color:#16a34a;font-weight:700">+${tr.qtyMasuk||0}</td>
+      <td>${tr.keterangan||''}</td>
+      <td class="no-print" style="text-align:center"><button data-path="${tr.path}" data-bahan="${tr.bahanId}" data-masuk="${tr.qtyMasuk}" class="btnHapus bg-red-600 text-white px-2.5 py-1 rounded text-[9px] font-bold">HAPUS</button></td>
+    </tr>`;
+  });
+  if(filtered.length===0) html='<tr><td colspan="6" style="padding:16px;text-align:center;color:#94a3b8">Tidak ada data di periode ini</td></tr>';
+  document.getElementById('tabel').innerHTML=html;
+  document.querySelectorAll('.btnHapus').forEach(b=>{ b.onclick=()=>hapus(b.dataset.path, b.dataset.bahan, b.dataset.masuk); });
+}
+
+document.getElementById('btnMasuk').onclick=async()=>{
+  let id=document.getElementById('bahan').value; if(!id) return alert('Pilih bahan beb!');
+  let qty=parseFloat(document.getElementById('qty').value||0); if(qty<=0) return alert('Qty >0');
+  let tgl=document.getElementById('tgl').value; let sup=document.getElementById('supplier').value; let ket=document.getElementById('ket').value;
+  let bh=bahanMap[id];
+  let snap=await get(ref(db,'inventory_bahan/'+id));
+  let stokLama=Number(snap.val()?.stok||0); let stokBaru=stokLama+qty;
+  await update(ref(db,'inventory_bahan/'+id),{stok:stokBaru});
+  await set(push(ref(db,'kartu')),{tanggal:tgl,bahanId:id,bahanNama:bh.nama,noRef:curNota,keterangan:sup+' '+ket,qtyMasuk:qty,qtyKeluar:0,createdAt:Date.now()});
+  document.getElementById('log').innerHTML=`<div class="bg-green-100 text-green-700 p-2 rounded font-bold">✅ ${bh.nama} ${stokLama} → ${stokBaru} (+${qty})</div>`;
+  curNota=genNota(); document.getElementById('qty').value=1; document.getElementById('ket').value=''; updateInfo();
+};
+
+async function hapus(path,bahanId,masuk){
+  if(!confirm('Hapus?')) return;
+  let snap=await get(ref(db,'inventory_bahan/'+bahanId));
+  if(snap.exists()){ let now=Number(snap.val()?.stok||0); await update(ref(db,'inventory_bahan/'+bahanId),{stok: now - Number(masuk||0)}); }
+  await remove(ref(db,path));
+}
+
+document.getElementById('btnCetak').onclick=()=>window.print();
+document.getElementById('btnPreview').onclick=()=>{
+  document.getElementById('previewPeriode').textContent=document.getElementById('labelPeriode').textContent;
+  document.getElementById('previewContent').innerHTML=document.getElementById('printArea').innerHTML;
+  document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex');
+};
+document.getElementById('closeModal').onclick=()=>{ document.getElementById('modal').classList.add('hidden'); };
+document.getElementById('cetakDariPreview').onclick=()=>{ document.getElementById('modal').classList.add('hidden'); window.print(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KSP - Koperasi Simpan Pinjam</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{font-family:Poppins,sans-serif;margin:0;background:#f6f8fb;color:#0f172a}
+.tabs{display:flex;gap:8px;background:#fff;padding:12px 18px;overflow-x:auto;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:10}
+.tab{padding:8px 14px;border-radius:999px;font-weight:700;font-size:11px;text-decoration:none;color:#0f172a;background:#f1f5f9;white-space:nowrap}
+.tab.active{background:#0ea5e9;color:#fff}
+.container{padding:14px;max-width:1600px;margin:auto}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid #f1f5f9}
+.card-left{padding:16px;position:sticky;top:62px}
+.card-right{padding:8px 10px}
+@media(max-width:900px){.card-left{position:static}}
+h3{margin:0 0 12px 0;font-size:13px}
+label{font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+input,select{padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;width:100%;font-family:Poppins;font-size:12px;background:#fff;margin-bottom:10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:Poppins}
+.btn-blue{background:#0ea5e9;color:#fff;width:100%;padding:11px;font-size:12px}
+.btn-green{background:#10b981;color:#fff;padding:4px 8px;border-radius:5px;font-size:11px;height:24px}
+.btn-red{background:#ef4444;color:#fff;padding:4px 8px;border-radius:5px;font-size:11px;height:24px}
+table{width:100%;border-collapse:collapse}
+th{color:#94a3b8;font-size:9px;text-transform:uppercase;padding:6px 6px;text-align:left;background:#f8fafc;position:sticky;top:0}
+td{padding:6px 6px;border-top:1px solid #f1f5f9;vertical-align:middle;line-height:1.1;font-size:11.5px}
+.nilai{font-weight:700}
+.scroll{max-height:80vh;overflow:auto}
+.stat{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-box{background:#fff;padding:12px;border-radius:12px;border:1px solid #f1f5f9;text-align:center}
+.stat-box b{font-size:16px;display:block}
+.stat-box span{font-size:9px;color:#64748b;text-transform:uppercase}
+.menu-ksp{display:flex;gap:6px;margin-bottom:12px}
+.menu-ksp button{flex:1;padding:8px;font-size:11px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;font-weight:700;cursor:pointer}
+.menu-ksp button.active{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+</style>
+</head><body>
+<div class="tabs">
+<a class="tab" href="invmenu.html">📊 Resto</a>
+<a class="tab active" href="ksp.html">🏦 KSP Koperasi</a>
+<a class="tab" href="bahan.html">🥩 Bahan</a>
+<a class="tab" href="hutang.html">💸 Hutang</a>
+</div>
+
+<div class="container">
+<div class="stat">
+<div class="stat-box"><span>Total Anggota</span><b id="sAnggota">0</b></div>
+<div class="stat-box"><span>Total Pinjaman</span><b id="sPinjam">Rp 0</b></div>
+<div class="stat-box"><span>Saldo Kas</span><b id="sKas">Rp 0</b></div>
+</div>
+
+<div class="layout">
+<!-- KIRI -->
+<div class="card card-left">
+<div class="menu-ksp">
+<button id="mAnggota" class="active" onclick="setMode('anggota')">Anggota</button>
+<button id="mPinjam" onclick="setMode('pinjam')">Pinjam</button>
+<button id="mAngsur" onclick="setMode('angsur')">Angsuran</button>
+</div>
+
+<div id="formAnggota">
+<h3>👤 Input Anggota</h3>
+<label>Nama Anggota</label><input id="aNama" placeholder="Made Suksma">
+<label>No HP</label><input id="aHP" placeholder="0812xxxx">
+<div class="row2">
+<div><label>Simp Pokok</label><input type="number" id="aPokok" value="100000"></div>
+<div><label>Simp Wajib</label><input type="number" id="aWajib" value="50000"></div>
+</div>
+<label>Simp Sukarela</label><input type="number" id="aSuka" value="0">
+<button class="btn btn-blue" onclick="simpanAnggota()">+ SIMPAN ANGGOTA</button>
+</div>
+
+<div id="formPinjam" style="display:none">
+<h3>💸 Input Pinjaman</h3>
+<label>Pilih Anggota</label><select id="pAnggota"></select>
+<label>Jumlah Pinjam</label><input type="number" id="pJumlah" value="1000000">
+<div class="row2">
+<div><label>Bunga %/bln</label><input type="number" id="pBunga" value="2"></div>
+<div><label>Tenor Bulan</label><input type="number" id="pTenor" value="10"></div>
+</div>
+<label>Tanggal Pinjam</label><input type="date" id="pTgl">
+<button class="btn btn-blue" onclick="simpanPinjam()">+ SIMPAN PINJAMAN</button>
+<div style="margin-top:10px;padding:10px;background:#f0f9ff;border-radius:8px;font-size:11px" id="simulasi"></div>
+</div>
+
+<div id="formAngsur" style="display:none">
+<h3>💰 Bayar Angsuran</h3>
+<label>Pilih Pinjaman</label><select id="anPinjam"></select>
+<label>Jumlah Bayar</label><input type="number" id="anJumlah">
+<label>Tanggal Bayar</label><input type="date" id="anTgl">
+<button class="btn btn-blue" onclick="simpanAngsur()">+ BAYAR ANGSURAN</button>
+</div>
+
+</div>
+
+<!-- KANAN -->
+<div class="card card-right">
+<div style="display:flex;justify-content:space-between;padding:8px 4px;align-items:center"><h3 id="judulTabel">📋 Data Anggota</h3><span id="jml" style="font-size:10px;background:#f1f5f9;padding:3px 8px;border-radius:99px">0 data</span></div>
+<div class="scroll"><table><thead id="thead"></thead><tbody id="tabel"></tbody></table></div>
+</div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI",
+  authDomain: "restopro2026-60038.firebaseapp.com",
+  databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "restopro2026-60038",
+  storageBucket: "restopro2026-60038.firebasestorage.app",
+  messagingSenderId: "336434967293",
+  appId: "1:336434967293:web:ba55b927cd01aa0229c494"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let anggota=[], pinjaman=[], angsuran=[], mode='anggota';
+document.getElementById('pTgl').valueAsDate=new Date();
+document.getElementById('anTgl').valueAsDate=new Date();
+
+onValue(ref(db,'ksp_anggota'), s=>{ anggota=s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[]; render(); });
+onValue(ref(db,'ksp_pinjaman'), s=>{ pinjaman=s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[]; render(); });
+onValue(ref(db,'ksp_angsuran'), s=>{ angsuran=s.val()?Object.keys(s.val()).map(k=>({id:k,...s.val()[k]})):[]; render(); });
+
+window.setMode = (m)=>{
+  mode=m;
+  document.querySelectorAll('.menu-ksp button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('m'+m.charAt(0).toUpperCase()+m.slice(1)).classList.add('active');
+  document.getElementById('formAnggota').style.display=m=='anggota'?'block':'none';
+  document.getElementById('formPinjam').style.display=m=='pinjam'?'block':'none';
+  document.getElementById('formAngsur').style.display=m=='angsur'?'block':'none';
+  render();
+}
+
+window.simpanAnggota = async()=>{
+  const nama=document.getElementById('aNama').value.trim(); if(!nama) return alert('Nama wajib beb!');
+  const d={nama,hp:document.getElementById('aHP').value,pokok:+document.getElementById('aPokok').value||0,wajib:+document.getElementById('aWajib').value||0,sukarela:+document.getElementById('aSuka').value||0,created:Date.now()};
+  await set(push(ref(db,'ksp_anggota')),d);
+  document.getElementById('aNama').value=''; document.getElementById('aHP').value='';
+}
+
+window.simpanPinjam = async()=>{
+  const anggotaId=document.getElementById('pAnggota').value; if(!anggotaId) return alert('Pilih anggota!');
+  const jumlah=+document.getElementById('pJumlah').value||0; const bunga=+document.getElementById('pBunga').value||0; const tenor=+document.getElementById('pTenor').value||1;
+  const angsuranBulan = Math.round((jumlah + (jumlah*bunga/100*tenor))/tenor);
+  const d={anggotaId,jumlah,bunga,tenor,angsuranBulan,sisa:jumlah + (jumlah*bunga/100*tenor),dibayar:0,tgl:document.getElementById('pTgl').value,created:Date.now(),status:'aktif'};
+  await set(push(ref(db,'ksp_pinjaman')),d);
+}
+
+window.simpanAngsur = async()=>{
+  const pinjamId=document.getElementById('anPinjam').value; if(!pinjamId) return alert('Pilih pinjaman!');
+  const jml=+document.getElementById('anJumlah').value||0; if(!jml) return alert('Isi jumlah!');
+  const d={pinjamId,jumlah:jml,tgl:document.getElementById('anTgl').value,created:Date.now()};
+  await set(push(ref(db,'ksp_angsuran')),d);
+}
+
+function render(){
+  // dropdown anggota
+  document.getElementById('pAnggota').innerHTML=anggota.map(a=>`<option value="${a.id}">${a.nama}</option>`).join('')||'<option>Belum ada anggota</option>';
+  document.getElementById('anPinjam').innerHTML=pinjaman.filter(p=>p.status!=='lunas').map(p=>{
+    const ag=anggota.find(a=>a.id===p.anggotaId); return `<option value="${p.id}">${ag?ag.nama:'-'} - Rp ${p.jumlah.toLocaleString('id-ID')} sisa Rp ${p.sisa.toLocaleString('id-ID')}</option>`;
+  }).join('')||'<option>Belum ada pinjaman aktif</option>';
+
+  // stats
+  document.getElementById('sAnggota').textContent=anggota.length;
+  const totalPinjam=pinjaman.reduce((a,b)=>a+b.jumlah,0);
+  document.getElementById('sPinjam').textContent='Rp '+totalPinjam.toLocaleString('id-ID');
+  const totalSimp=anggota.reduce((a,b)=>a+(b.pokok||0)+(b.wajib||0)+(b.sukarela||0),0);
+  const totalAngsur=angsuran.reduce((a,b)=>a+b.jumlah,0);
+  document.getElementById('sKas').textContent='Rp '+(totalSimp+totalAngsur).toLocaleString('id-ID');
+  document.getElementById('jml').textContent=(mode=='anggota'?anggota.length:mode=='pinjam'?pinjaman.length:angsuran.length)+' data';
+
+  // simulasi
+  const j=+document.getElementById('pJumlah').value||0; const b=+document.getElementById('pBunga').value||0; const t=+document.getElementById('pTenor').value||1;
+  const tot=j+(j*b/100*t); const perbulan=Math.round(tot/t);
+  document.getElementById('simulasi').innerHTML=`Total balik: <b>Rp ${tot.toLocaleString('id-ID')}</b><br>Angsuran: <b>Rp ${perbulan.toLocaleString('id-ID')} x ${t} bln</b><br>Bunga: Rp ${(tot-j).toLocaleString('id-ID')}`;
+
+  if(mode=='anggota'){
+    document.getElementById('judulTabel').textContent='📋 Data Anggota';
+    document.getElementById('thead').innerHTML='<tr><th>NAMA</th><th>POKOK</th><th>WAJIB</th><th>SUKARELA</th><th>TOTAL</th><th>AKSI</th></tr>';
+    document.getElementById('tabel').innerHTML=anggota.map(a=>{
+      const tot=(a.pokok||0)+(a.wajib||0)+(a.sukarela||0);
+      return `<tr><td><b>${a.nama}</b><br><span style="font-size:10px;color:#64748b">${a.hp||''}</span></td><td>Rp ${(a.pokok||0).toLocaleString('id-ID')}</td><td>Rp ${(a.wajib||0).toLocaleString('id-ID')}</td><td>Rp ${(a.sukarela||0).toLocaleString('id-ID')}</td><td class="nilai">Rp ${tot.toLocaleString('id-ID')}</td><td><button class="btn btn-red" onclick="hapus('ksp_anggota','${a.id}')">🗑</button></td></tr>`;
+    }).join('')||'<tr><td colspan=6 style="text-align:center;padding:20px;color:#94a3b8">Belum ada anggota beb</td></tr>';
+  }else if(mode=='pinjam'){
+    document.getElementById('judulTabel').textContent='💸 Data Pinjaman';
+    document.getElementById('thead').innerHTML='<tr><th>ANGGOTA</th><th>PINJAM</th><th>BUNGA</th><th>TENOR</th><th>SISA</th><th>AKSI</th></tr>';
+    document.getElementById('tabel').innerHTML=pinjaman.map(p=>{
+      const ag=anggota.find(a=>a.id===p.anggotaId); const dibayar=angsuran.filter(an=>an.pinjamId===p.id).reduce((a,b)=>a+b.jumlah,0); const sisa=p.sisa-dibayar;
+      return `<tr><td><b>${ag?ag.nama:'-'}</b><br><span style="font-size:10px;color:#64748b">${p.tgl||''}</span></td><td>Rp ${p.jumlah.toLocaleString('id-ID')}</td><td>${p.bunga}%</td><td>${p.tenor} bln<br><span style="font-size:10px">Rp ${p.angsuranBulan.toLocaleString('id-ID')}/bln</span></td><td class="nilai" style="color:${sisa<=0?'#10b981':'#ef4444'}">Rp ${sisa.toLocaleString('id-ID')}</td><td><button class="btn btn-red" onclick="hapus('ksp_pinjaman','${p.id}')">🗑</button></td></tr>`;
+    }).join('')||'<tr><td colspan=6 style="text-align:center;padding:20px;color:#94a3b8">Belum ada pinjaman beb</td></tr>';
+  }else{
+    document.getElementById('judulTabel').textContent='💰 Data Angsuran';
+    document.getElementById('thead').innerHTML='<tr><th>TGL</th><th>ANGGOTA</th><th>PINJAMAN</th><th>BAYAR</th><th>AKSI</th></tr>';
+    document.getElementById('tabel').innerHTML=angsuran.map(an=>{
+      const p=pinjaman.find(x=>x.id===an.pinjamId); const ag=p?anggota.find(a=>a.id===p.anggotaId):null;
+      return `<tr><td>${an.tgl||''}</td><td><b>${ag?ag.nama:'-'}</b></td><td>Rp ${p?p.jumlah.toLocaleString('id-ID'):'-'}</td><td class="nilai">Rp ${an.jumlah.toLocaleString('id-ID')}</td><td><button class="btn btn-red" onclick="hapus('ksp_angsuran','${an.id}')">🗑</button></td></tr>`;
+    }).join('')||'<tr><td colspan=5 style="text-align:center;padding:20px;color:#94a3b8">Belum ada angsuran beb</td></tr>';
+  }
+}
+window.hapus = async(path,id)=>{ if(!confirm('Hapus data ini beb?')) return; await remove(ref(db,path+'/'+id)); }
+document.getElementById('pJumlah').addEventListener('input',render);
+document.getElementById('pBunga').addEventListener('input',render);
+document.getElementById('pTenor').addEventListener('input',render);
+</script>
+</body></html>

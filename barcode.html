@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Master Data Meja - QRIS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQZt0XJtHQj15iI",
+    authDomain: "restopro2026-60038.firebaseapp.com",
+    databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "restopro2026-60038",
+    storageBucket: "restopro2026-60038.firebasestorage.app",
+    messagingSenderId: "336434967293",
+    appId: "1:336434967293:web:ba55b927cd01aa0229c494"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const mejaRef = ref(db, 'meja');
+
+onValue(mejaRef, (snapshot) => {
+  const list = document.getElementById('listMeja');
+  list.innerHTML = "";
+  if(!snapshot.exists()){
+    list.innerHTML = "<p>Belum ada data meja. Silahkan tambah dulu</p>";
+    return;
+  }
+  snapshot.forEach((child) => {
+    const data = child.val();
+    const id = child.key;
+
+    // PENTING: ganti ke selforder.html
+    const linkMenu = window.location.origin + "/selforder.html?kode=" + data.kode;
+
+    list.innerHTML += `
+      <div class="card">
+        <h4>${data.nama}</h4>
+        <div id="qris-${id}" class="qrcode"></div>
+        <p>Kode: <b>${data.kode}</b></p>
+        <button class="btn-download" onclick="downloadQR('${id}', '${data.nama}')">Download</button>
+        <button class="btn-hapus" onclick="hapusMeja('${id}')">Hapus</button>
+      </div>
+    `;
+
+    new QRCode(document.getElementById(`qris-${id}`), {
+      text: linkMenu,
+      width: 150, height: 150
+    });
+  });
+});
+
+window.generate = () => {
+  const nama = document.getElementById('namaMeja').value;
+  if(nama.trim() === "") return alert("Isi nama meja dulu beb");
+  const kode = "MEJA-" + Date.now();
+  push(mejaRef, {nama: nama, kode: kode, waktu: new Date().toLocaleString()});
+  document.getElementById('namaMeja').value = "";
+}
+
+window.hapusMeja = (id) => {
+  if(confirm("Hapus meja ini?")) remove(ref(db, 'meja/' + id));
+}
+
+window.downloadQR = (id, nama) => {
+  const canvas = document.querySelector(`#qris-${id} canvas`);
+  const a = document.createElement("a");
+  a.download = nama + "-QR.png";
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
+</script>
+
+<style>
+body{font-family:sans-serif; background:#f5f5f5; padding:20px}
+.header{background:orange; color:white; padding:15px; text-align:center; border-radius:10px; margin-bottom:20px}
+.form{background:white; padding:20px; border-radius:10px; margin-bottom:20px; display:flex; gap:10px}
+input{padding:10px; flex:1; border:1px solid #ccc; border-radius:5px}
+button{padding:10px 15px; background:#ff5722; color:white; border:none; border-radius:5px; cursor:pointer}
+#listMeja{display:flex; flex-wrap:wrap; gap:15px}
+.card{background:white; padding:15px; border-radius:10px; text-align:center; width:230px; box-shadow:0 2px 5px #ddd}
+.qrcode{display:flex; justify-content:center; padding:10px}
+.btn-download{background:green}.btn-hapus{background:red}
+</style>
+</head>
+<body>
+
+<div class="header"><h2>📋 Master Data Meja + QR</h2></div>
+
+<div class="form">
+  <input type="text" id="namaMeja" placeholder="Masukan Nama Meja. Contoh: mawar merah">
+  <button onclick="generate()">Generate QR & Simpan</button>
+</div>
+
+<h3>Daftar Meja</h3>
+<div id="listMeja"><p>Loading data...</p></div>
+
+</body>
+</html>

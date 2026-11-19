@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hutang - Filter + Hapus</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:Poppins;margin:0;background:#f8fafc}
+.tabs{display:flex;gap:8px;background:#fff;padding:12px 18px;overflow-x:auto;border-bottom:2px solid #e2e8f0}
+.tab{padding:8px 13px;border-radius:999px;font-weight:700;font-size:11px;text-decoration:none;color:#000;background:#f1f5f9;white-space:nowrap}
+.tab.active{background:#ef4444;color:#fff}
+.container{padding:16px;max-width:1300px;margin:auto}
+.card{background:#fff;padding:16px;border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+input{padding:10px;border:1px solid #cbd5e1;border-radius:10px;width:100%;box-sizing:border-box;font-family:Poppins}
+.btn{padding:7px 11px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:10px}
+.btn-hijau{background:#10b981;color:#fff}.btn-merah{background:#ef4444;color:#fff}.btn-abu{background:#e2e8f0;color:#334155}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f8fafc;padding:10px 8px;text-align:left;font-size:10px;color:#64748b}
+td{padding:10px 8px;border-top:1px solid #f1f5f9}
+.badge{padding:3px 8px;border-radius:999px;font-size:9px;font-weight:700}
+.badge-merah{background:#fef2f2;color:#ef4444}.badge-hijau{background:#f0fdf4;color:#10b981}.badge-orange{background:#fff7ed;color:#f97316}
+.filter-tab{padding:6px 14px;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid #e2e8f0;background:#fff}
+.filter-tab.active{background:#1e293b;color:#fff;border-color:#1e293b}
+</style>
+</head>
+<body>
+<div class="tabs">
+<a class="tab" href="index.html">📊 Dashboard</a>
+<a class="tab" href="bahan.html">🥩 Bahan</a>
+<a class="tab" href="supplier.html">🚚 Supplier</a>
+<a class="tab" href="notabeli.html">📥 Nota Beli</a>
+<a class="tab active" href="hutang.html">💸 Hutang</a>
+<a class="tab" href="keluar.html">🍳 Keluar</a>
+<a class="tab" href="kartu.html">📇 Kartu</a>
+<a class="tab" href="opname.html">📝 Opname</a>
+</div>
+
+<div class="container">
+<!-- SUMMARY -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+<div class="card" style="background:#fef2f2;border-left:4px solid #ef4444;margin:0"><p style="font-size:10px;color:#ef4444;margin:0">TOTAL SISA HUTANG</p><h2 id="totalHutang" style="margin:4px 0;color:#ef4444">Rp 0</h2></div>
+<div class="card" style="background:#fff7ed;border-left:4px solid #f97316;margin:0"><p style="font-size:10px;color:#f97316;margin:0">JATUH TEMPO ≤3 HARI</p><h2 id="jatuhDekat" style="margin:4px 0;color:#f97316">0 Nota</h2></div>
+<div class="card" style="background:#f0fdf4;border-left:4px solid #10b981;margin:0"><p style="font-size:10px;color:#10b981;margin:0">SUDAH LUNAS</p><h2 id="lunasCount" style="margin:4px 0;color:#10b981">0 Nota</h2></div>
+</div>
+
+<!-- CARD UTAMA DENGAN FILTER -->
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+<div style="display:flex;gap:6px">
+<button id="fSemua" class="filter-tab active" onclick="setFilter('semua')">📋 Semua Hutang</button>
+<button id="fBelum" class="filter-tab" onclick="setFilter('belum')">🔴 Belum Lunas</button>
+<button id="fLunas" class="filter-tab" onclick="setFilter('lunas')">✅ Sudah Lunas</button>
+</div>
+<input id="searchHutang" placeholder="Cari supplier/nota..." style="width:200px;padding:6px 10px;font-size:10px">
+</div>
+
+<table>
+<thead><tr><th>Tgl</th><th>Tempo</th><th>Supplier</th><th>Invoice</th><th>Total</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="tabel"></tbody>
+</table>
+<div id="empty" style="text-align:center;padding:20px;color:#10b981;display:none">✅ Tidak ada data beb!</div>
+</div>
+</div>
+
+<!-- MODAL BAYAR -->
+<div id="modalBayar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;padding:20px">
+<div style="background:#fff;max-width:420px;margin:80px auto;padding:20px;border-radius:14px">
+<h4 style="margin-top:0">💰 Bayar Hutang</h4>
+<div id="detail" style="background:#f8fafc;padding:12px;border-radius:10px;font-size:11px;margin-bottom:12px"></div>
+<label style="font-size:10px;font-weight:700">Jumlah Bayar</label><input type="number" id="bayarJumlah" style="margin-bottom:10px">
+<label style="font-size:10px;font-weight:700">Tgl Bayar</label><input type="date" id="bayarTgl">
+<div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-hijau" style="flex:1" onclick="proses()">Simpan</button><button class="btn btn-abu" onclick="document.getElementById('modalBayar').style.display='none'">Batal</button></div>
+</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const firebaseConfig = { apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI", authDomain: "restopro2026-60038.firebaseapp.com", databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "restopro2026-60038", storageBucket: "restopro2026-60038.firebasestorage.app", messagingSenderId: "336434967293", appId: "1:336434967293:web:ba55b927cd01aa0229c494" };
+const app=initializeApp(firebaseConfig); const db=getDatabase(app);
+
+let listHutang=[], bayarKey=null, bayarData=null, filter='semua';
+document.getElementById('bayarTgl').valueAsDate=new Date();
+
+onValue(ref(db,'hutang'), snap=>{
+  listHutang=[];
+  if(snap.exists()){
+    snap.forEach(c=>{ 
+      let v=c.val();
+      // filter data sampah Rp 0 dari foto kamu
+      if((v.totalHutang||0)>0) listHutang.push({key:c.key, ...v}); 
+    });
+  }
+  render();
+});
+
+window.setFilter=(f)=>{
+  filter=f;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  if(f==='semua') document.getElementById('fSemua').classList.add('active');
+  if(f==='belum') document.getElementById('fBelum').classList.add('active');
+  if(f==='lunas') document.getElementById('fLunas').classList.add('active');
+  render();
+}
+
+function render(){
+  const tbody=document.getElementById('tabel');
+  const today=new Date(); today.setHours(0,0,0,0);
+  let totalBelum=0, dekat=0, lunasCount=0;
+
+  let filtered=listHutang;
+  if(filter==='belum') filtered=listHutang.filter(h=> (h.sisaHutang||0)>0);
+  if(filter==='lunas') filtered=listHutang.filter(h=> (h.sisaHutang||0)<=0);
+
+  listHutang.forEach(h=>{
+    if((h.sisaHutang||0)>0){
+      totalBelum+=h.sisaHutang;
+      if(h.jatuhTempo && h.jatuhTempo!='-'){
+        let tempo=new Date(h.jatuhTempo);
+        let diff=Math.ceil((tempo-today)/(1000*60*60*24));
+        if(diff<=3 && diff>=0) dekat++;
+      }
+    } else { lunasCount++; }
+  });
+
+  document.getElementById('totalHutang').innerText='Rp '+totalBelum.toLocaleString('id-ID');
+  document.getElementById('jatuhDekat').innerText=dekat+' Nota';
+  document.getElementById('lunasCount').innerText=lunasCount+' Nota';
+
+  // sort tempo terdekat dulu
+  filtered.sort((a,b)=> new Date(a.jatuhTempo) - new Date(b.jatuhTempo));
+
+  tbody.innerHTML=filtered.map(h=>{
+    let diffTxt='';
+    if(h.jatuhTempo && h.jatuhTempo!='-' && (h.sisaHutang||0)>0){
+      let tempo=new Date(h.jatuhTempo);
+      let diff=Math.ceil((tempo-today)/(1000*60*60*24));
+      if(diff<0) diffTxt=`<span class="badge badge-merah">Lewat ${Math.abs(diff)}h</span>`;
+      else if(diff<=3) diffTxt=`<span class="badge badge-orange">${diff}h lagi</span>`;
+      else diffTxt=`<span class="badge badge-hijau">${diff}h lagi</span>`;
+    }
+    let isLunas=(h.sisaHutang||0)<=0;
+    return `<tr>
+      <td>${(h.tanggal||'').substring(0,10)}</td>
+      <td style="color:${isLunas?'#10b981':'#ef4444'};font-weight:700">${h.jatuhTempo||'-'}<br>${diffTxt}</td>
+      <td><b>${h.supplierNama||'-'}</b><br><span style="font-size:9px;color:#888">${h.cp||''}</span></td>
+      <td><b>${h.noNota||''}</b></td>
+      <td>Rp ${(h.totalHutang||0).toLocaleString('id-ID')}</td>
+      <td style="color:${isLunas?'#10b981':'#ef4444'};font-weight:800">Rp ${(h.sisaHutang||0).toLocaleString('id-ID')}</td>
+      <td><span class="badge ${isLunas?'badge-hijau':'badge-merah'}">${isLunas?'LUNAS':'BELUM'}</span></td>
+      <td style="display:flex;gap:4px">
+        ${!isLunas?`<button class="btn btn-hijau" onclick="bayar('${h.key}')">Bayar</button>`:''}
+        <button class="btn btn-merah" onclick="hapus('${h.key}','${h.noNota}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('empty').style.display=filtered.length===0?'block':'none';
+}
+
+window.bayar=(key)=>{
+  let h=listHutang.find(x=>x.key===key);
+  bayarKey=key; bayarData=h;
+  document.getElementById('detail').innerHTML=`<b>${h.noNota}</b> - ${h.supplierNama}<br>Sisa: <b style="color:#ef4444">Rp ${(h.sisaHutang||0).toLocaleString('id-ID')}</b><br>Tempo: ${h.jatuhTempo}`;
+  document.getElementById('bayarJumlah').value=h.sisaHutang;
+  document.getElementById('modalBayar').style.display='block';
+};
+
+window.proses=async()=>{
+  if(!bayarKey) return;
+  let bayar=+document.getElementById('bayarJumlah').value||0;
+  if(bayar<=0) return alert("Isi jumlah bayar beb!");
+  let h=bayarData;
+  let sisa=(h.sisaHutang||0)-bayar;
+  let tgl=document.getElementById('bayarTgl').value;
+  await update(ref(db,'hutang/'+bayarKey),{
+    sisaHutang: Math.max(0,sisa),
+    terbayar: (h.terbayar||0)+bayar,
+    status: sisa<=0?'LUNAS':'BELUM LUNAS',
+    tglLunas: sisa<=0? tgl : h.tglLunas||'',
+    lastBayar: tgl
+  });
+  document.getElementById('modalBayar').style.display='none';
+  alert(sisa<=0?'✅ LUNAS beb!':'✅ Bayar Rp '+bayar.toLocaleString('id-ID'));
+};
+
+window.hapus=async(key,noNota)=>{
+  if(!confirm(`Hapus hutang ${noNota} ?\nData akan hilang permanen beb!`)) return;
+  if(!confirm(`Yakin banget hapus ${noNota}?`)) return;
+  await remove(ref(db,'hutang/'+key));
+  alert('🗑️ Hutang '+noNota+' dihapus');
+};
+
+document.getElementById('searchHutang').onkeyup=(e)=>{
+  let q=e.target.value.toLowerCase();
+  document.querySelectorAll('#tabel tr').forEach(tr=>{ tr.style.display=tr.innerText.toLowerCase().includes(q)?'':'none'; });
+};
+</script>
+</body>
+</html>

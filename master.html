@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><title>RESTOPRO - Master Menu</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family: 'Poppins', sans-serif; margin:0; background:#e6ecf3;}
+nav{background:#1e293b; color:#fff; padding:8px 20px; display:flex; align-items:center; justify-content:space-between;}
+nav ul{display:flex; gap:5px; list-style:none; margin:0; padding:0;}
+nav ul li a{color:#cbd5e1; text-decoration:none; padding:8px 12px; font-size:13px; border-radius:6px;}
+nav ul li a.active{background:#10b981; color:#fff;}
+.container{padding:20px 30px;}.card{background:#fff; border-radius:12px; padding:20px;}
+.form-row{display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:end;}
+input, select, button{padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-family: 'Poppins';}
+.btn-hijau{background:#10b981; color:#fff; border:none; font-weight:700; cursor:pointer;}
+.btn-merah{background:#ef4444; color:#fff; border:none; font-weight:700; cursor:pointer;}
+table{width:100%; border-collapse:collapse; margin-top:10px;}
+th,td{border:1px solid #ddd; padding:10px; text-align:left; vertical-align:middle;}
+th{background:#1e293b; color:#fff;}.img-preview{width:60px; height:60px; object-fit:cover; border-radius:6px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:28px;}
+.btn-aksi{padding:6px 10px; border:none; border-radius:4px; cursor:pointer; margin-right:4px; font-family: 'Poppins';}
+.btn-edit{background:#f59e0b; color:#fff;}.btn-delete{background:#ef4444; color:#fff;}
+.backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1);}
+.backup-bar button{background:#10b981; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
+.backup-bar button.sec{background:#334155;}
+</style></head><body>
+<nav><div>📦 RESTOPRO</div><ul>
+<li><a href="dashboard.html">📊 Dashboard</a></li><li><a href="master.html" class="active">📦 Menu</a></li>
+<li><a href="meja.html">🪑 Meja</a></li><li><a href="kasir.html">💼 Kasir</a></li><li><a href="tools.html">⚙️ Tools</a></li>
+</ul></nav>
+<div class="backup-bar">
+  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <span id="totalMenu" style="background:#0f172a;padding:4px 10px;border-radius:20px;">Total Menu: 0</span>
+    <button onclick="backupSekarang('manual')">Backup Manual</button>
+    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
+  </span>
+  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+</div>
+<div class="container"><div class="card"><h1>📦 Kelola Data Menu</h1>
+<p style="font-size:13px;color:#64748b;margin-top:-10px;">Foto OPTIONAL beb, bisa tes data tanpa foto! Kalau nggak pilih foto, pake gambar bawaan 🍽️</p>
+<form id="formMenu" class="form-row">
+<input type="text" id="namaMenu" placeholder="Nama Menu - WAJIB" required>
+<input type="number" id="hargaMenu" placeholder="Harga - WAJIB" required>
+<select id="kategoriMenu"><option>Makanan</option><option>Minuman</option></select>
+<input type="file" id="gambarMenu" accept="image/*">
+<img id="preview" class="img-preview" style="display:none;">
+<button type="submit" class="btn-hijau">💾 Simpan Menu</button>
+<button type="button" class="btn-merah" onclick="hapusSemuaMenu()">🗑️ Hapus Semua Menu</button>
+</form>
+<table id="tableMenu"><thead><tr><th>Gambar</th><th>Nama Menu</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+</div></div>
+<script>
+  const KEY_DATA = 'restopro_data_v1';
+  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
+  const GAMBAR_DEFAULT = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=200';
+  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
+  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+  function loadData(){
+    let raw = localStorage.getItem(KEY_DATA);
+    if(!raw){
+      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], inventory:[], menuData:[] };
+      localStorage.setItem(KEY_DATA, JSON.stringify(awal));
+      return awal;
+    }
+    let data = JSON.parse(raw);
+    if(!data.menuData) data.menuData = [];
+    return data;
+  }
+  function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
+  function cekStatusSaja(){
+    let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
+    if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; }
+  }
+  function backupSekarang(mode){
+    let data = loadData(); let userLogin = localStorage.getItem('userLogin');
+    let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
+    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
+    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+  }
+  function restoreFile(e){
+    let file = e.target.files[0]; if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(){
+      try{
+        let data = JSON.parse(reader.result);
+        if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin));
+        localStorage.setItem(KEY_DATA, JSON.stringify(data));
+        alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!');
+        location.reload();
+      }catch(err){ alert('File backup rusak beb!'); }
+    };
+    reader.readAsText(file);
+  }
+  const elGambarMenu = document.getElementById('gambarMenu');
+  const elFormMenu = document.getElementById('formMenu');
+  const elTableMenu = document.getElementById('tableMenu');
+  const elPreview = document.getElementById('preview');
+  const elNamaMenu = document.getElementById('namaMenu');
+  const elHargaMenu = document.getElementById('hargaMenu');
+  const elKategoriMenu = document.getElementById('kategoriMenu');
+  const elTotalMenu = document.getElementById('totalMenu');
+  let menuData = loadData().menuData || [];
+  let editMenuId = null;
+  let gambarBase64 = "";
+  let userLogin = JSON.parse(localStorage.getItem("userLogin") || "null");
+  if(!userLogin || !["Admin/Owner", "Manager"].includes(userLogin.role)){ alert("Hanya Admin/Manager yang bisa akses!"); window.location.href = "index.html"; }
+  function renderMenu(){
+    elTableMenu.querySelector("tbody").innerHTML = menuData.map((m)=>`
+      <tr>
+        <td><img src="${m.gambar || GAMBAR_DEFAULT}" class="img-preview" onerror="this.src='${GAMBAR_DEFAULT}'"></td>
+        <td><b>${m.nama}</b></td>
+        <td>${m.kategori}</td>
+        <td>Rp ${m.harga.toLocaleString("id-ID")}</td>
+        <td>
+          <button class="btn-aksi btn-edit" onclick="editMenu('${m.id}')">Edit</button>
+          <button class="btn-aksi btn-delete" onclick="hapusMenu('${m.id}')">Hapus</button>
+        </td>
+      </tr>`).join("");
+    if(elTotalMenu) elTotalMenu.textContent = 'Total Menu: ' + menuData.length;
+  }
+  window.hapusSemuaMenu = function(){
+    if(!confirm("Yakin beb mau HAPUS SEMUA " + menuData.length + " menu di LocalStorage? Nggak bisa balik kecuali Restore Backup beb!")) return;
+    let data = loadData();
+    data.menuData = [];
+    saveData(data);
+    localStorage.removeItem('menuData');
+    menuData = [];
+    renderMenu();
+    alert("Beres beb! Semua menu di LocalStorage udah kehapus! Total Menu jadi 0 beb!");
+  }
+  elGambarMenu.addEventListener("change", function(e){
+    let file = e.target.files[0];
+    if(file){
+      let reader = new FileReader();
+      reader.onload = function(event){ gambarBase64 = event.target.result; elPreview.src = gambarBase64; elPreview.style.display = "block"; };
+      reader.readAsDataURL(file);
+    }
+  });
+  elFormMenu.addEventListener("submit", e=>{
+    e.preventDefault();
+    // TIDAK WAJIB FOTO LAGI BEB! Bisa tes tanpa foto!
+    let gambarFinal = gambarBase64 || GAMBAR_DEFAULT;
+    let data = loadData();
+    if(editMenuId == null){
+      // TAMBAH BARU - tanpa foto juga bisa!
+      let baru = { id: 'menu_' + Date.now(), nama: elNamaMenu.value, harga: +elHargaMenu.value, kategori: elKategoriMenu.value, gambar: gambarFinal };
+      data.menuData.push(baru);
+    } else {
+      let idx = data.menuData.findIndex(m=>m.id==editMenuId);
+      if(idx >= 0){
+        // EDIT - kalau tidak pilih foto baru, pakai foto lama
+        let fotoLama = data.menuData[idx].gambar || GAMBAR_DEFAULT;
+        data.menuData[idx] = { id: editMenuId, nama: elNamaMenu.value, harga: +elHargaMenu.value, kategori: elKategoriMenu.value, gambar: gambarBase64 || fotoLama };
+      }
+      editMenuId = null;
+    }
+    saveData(data);
+    menuData = data.menuData;
+    renderMenu();
+    e.target.reset();
+    elPreview.style.display = "none";
+    gambarBase64 = "";
+  });
+  window.editMenu = function(id){
+    let m = menuData.find(x=>x.id==id);
+    if(!m) return;
+    elNamaMenu.value = m.nama; elHargaMenu.value = m.harga; elKategoriMenu.value = m.kategori;
+    gambarBase64 = "";
+    elPreview.src = m.gambar || GAMBAR_DEFAULT; elPreview.style.display = "block";
+    editMenuId = id;
+  }
+  window.hapusMenu = function(id){
+    if(confirm("Yakin mau hapus menu ini?")){
+      let data = loadData();
+      data.menuData = data.menuData.filter(m=>m.id != id);
+      saveData(data);
+      menuData = data.menuData;
+      renderMenu();
+    }
+  }
+  cekStatusSaja();
+  renderMenu();
+</script>
+</body></html>

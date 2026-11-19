@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supplier - Restopro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>*{font-size:11px}</style>
+</head>
+<body class="bg-[#f5f5f7] p-2">
+<div class="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3">
+
+  <!-- KIRI: FORM - HIJAU LUMUT -->
+  <div id="cardForm" class="lg:col-span-4 bg-[#E8F0E5] border-2 border-[#8AA882] rounded-xl p-4 h-fit transition-all">
+    <h2 id="headerForm" class="font-bold text-[13px] text-[#3A5A32] mb-3">Tambah Supplier</h2>
+
+    <label class="text-[9px] font-bold text-[#5A7A52]">NAMA SUPPLIER</label>
+    <input id="namaSup" class="w-full border border-[#8AA882]/50 rounded-md mb-2 bg-white p-2" placeholder="CV Ayam Segar">
+
+    <label class="text-[9px] font-bold text-[#5A7A52]">KONTAK PERSON (CP)</label>
+    <input id="cpSup" class="w-full border border-[#8AA882]/50 rounded-md mb-2 bg-white p-2" placeholder="Bpk Made">
+
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div><label class="text-[9px] font-bold text-[#5A7A52]">NO HP / WA</label>
+        <input id="hpSup" class="w-full border rounded-md bg-white p-2" placeholder="0812..."></div>
+      <div><label class="text-[9px] font-bold text-[#FF6B00]">MAX KREDIT (HARI)</label>
+        <input id="maxKredit" type="number" value="14" class="w-full border-2 border-orange-300 rounded-md bg-[#FFF7ED] p-2 font-bold"></div>
+    </div>
+
+    <label class="text-[9px] font-bold text-[#5A7A52]">ALAMAT</label>
+    <textarea id="alamatSup" class="w-full border rounded-md mb-3 bg-white p-2 h-[50px]" placeholder="Jl. Raya..."></textarea>
+
+    <button id="btnSimpan" class="w-full bg-[#FF6B00] text-white font-bold py-2 rounded-md">SIMPAN SUPPLIER</button>
+    <button id="btnBatal" class="w-full mt-2 border rounded-md py-1.5 hidden bg-white">BATAL EDIT</button>
+    <p id="status" class="text-[10px] text-center mt-2"></p>
+    <p class="text-[8px] text-[#5A7A52] mt-2">* Max Kredit akan jadi acuan otomatis jatuh tempo di Nota Beli</p>
+  </div>
+
+  <!-- KANAN: LIST - BIRU LANGIT -->
+  <div class="lg:col-span-8 bg-[#EAF4FF] border-2 border-[#93C5FD] rounded-xl p-3">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="font-bold text-[12px] text-[#1E40AF]">Daftar Supplier</h2>
+      <input id="search" placeholder="Cari..." class="border border-blue-200 rounded-md px-2 py-1 w-28 bg-white">
+    </div>
+    <table class="w-full bg-white rounded-lg overflow-hidden">
+      <thead><tr class="bg-[#BFDBFE] text-[9px] text-[#1E40AF]">
+        <th class="p-2 text-left">SUPPLIER</th><th class="p-2">CP</th><th class="p-2">HP</th><th class="p-2">MAX KREDIT</th><th class="p-2">AKSI</th>
+      </tr></thead>
+      <tbody id="tabelSup" class="text-[11px]"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQz0XtJHQj15iI",
+  authDomain: "restopro2026-60038.firebaseapp.com",
+  databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "restopro2026-60038",
+  storageBucket: "restopro2026-60038.firebasestorage.app",
+  messagingSenderId: "336434967293",
+  appId: "1:336434967293:web:ba55b927cd01aa0229c494"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const supRef = ref(db,'supplier');
+
+let editId=null;
+const cardForm=document.getElementById('cardForm'), headerForm=document.getElementById('headerForm'), btnSimpan=document.getElementById('btnSimpan'), btnBatal=document.getElementById('btnBatal'), statusEl=document.getElementById('status');
+
+function setModeEdit(active){
+  if(active){
+    cardForm.className="lg:col-span-4 bg-[#FFF3E0] border-2 border-[#FF9800] rounded-xl p-4 h-fit";
+    headerForm.innerText="✏️ EDIT SUPPLIER"; btnSimpan.innerText="UPDATE DATA"; btnSimpan.className="w-full bg-orange-600 text-white font-bold py-2 rounded-md";
+    btnBatal.classList.remove('hidden');
+  }else{
+    cardForm.className="lg:col-span-4 bg-[#E8F0E5] border-2 border-[#8AA882] rounded-xl p-4 h-fit";
+    headerForm.innerText="Tambah Supplier"; btnSimpan.innerText="SIMPAN SUPPLIER"; btnSimpan.className="w-full bg-[#FF6B00] text-white font-bold py-2 rounded-md";
+    btnBatal.classList.add('hidden'); editId=null;
+    document.getElementById('namaSup').value=""; document.getElementById('cpSup').value=""; document.getElementById('hpSup').value=""; document.getElementById('alamatSup').value="";
+  }
+}
+btnBatal.onclick=()=>setModeEdit(false);
+
+onValue(supRef, snap=>{
+  const tbody=document.getElementById('tabelSup'); tbody.innerHTML="";
+  if(!snap.exists()){ tbody.innerHTML='<tr><td colspan="5" class="p-3 text-center text-gray-400">Belum ada supplier</td></tr>'; return; }
+  snap.forEach(child=>{
+    const s=child.val();
+    tbody.innerHTML+=`<tr class="border-b hover:bg-blue-50">
+      <td class="p-2"><b>${s.nama}</b><br><span class="text-[9px] text-gray-500">${s.alamat||''}</span></td>
+      <td class="p-2 text-center">${s.cp||'-'}</td>
+      <td class="p-2 text-center">${s.hp||'-'}</td>
+      <td class="p-2 text-center"><span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">${s.maxKredit||0} Hari</span></td>
+      <td class="p-2 text-center"><button class="btn-edit" data-id="${child.key}">✏️</button> <button class="btn-hapus" data-id="${child.key}">🗑️</button></td></tr>`;
+  });
+  document.querySelectorAll('.btn-edit').forEach(btn=>{
+    btn.onclick=()=>{
+      const tr=btn.closest('tr');
+      // ambil dari DB lagi biar akurat
+      onValue(ref(db,'supplier/'+btn.dataset.id), s=>{
+        const data=s.val();
+        document.getElementById('namaSup').value=data.nama;
+        document.getElementById('cpSup').value=data.cp;
+        document.getElementById('hpSup').value=data.hp;
+        document.getElementById('maxKredit').value=data.maxKredit;
+        document.getElementById('alamatSup').value=data.alamat;
+      }, {onlyOnce:true});
+      editId=btn.dataset.id; setModeEdit(true);
+    }
+  });
+  document.querySelectorAll('.btn-hapus').forEach(btn=>{
+    btn.onclick=async()=>{ if(confirm("Hapus supplier?")) await remove(ref(db,'supplier/'+btn.dataset.id)); }
+  });
+});
+
+document.getElementById('btnSimpan').onclick=async()=>{
+  const data={
+    nama:document.getElementById('namaSup').value.trim(),
+    cp:document.getElementById('cpSup').value.trim(),
+    hp:document.getElementById('hpSup').value.trim(),
+    maxKredit:Number(document.getElementById('maxKredit').value)||0,
+    alamat:document.getElementById('alamatSup').value.trim(),
+    updatedAt:Date.now()
+  };
+  if(!data.nama) return alert("Isi nama supplier dulu beb!");
+  if(editId){
+    await update(ref(db,'supplier/'+editId), data);
+    statusEl.innerText="✅ Update berhasil!";
+  }else{
+    data.createdAt=Date.now();
+    const newRef=push(supRef); await set(newRef, data);
+    statusEl.innerText="✅ Supplier tersimpan!";
+  }
+  setModeEdit(false); setTimeout(()=>statusEl.innerText="",2000);
+}
+</script>
+</body>
+</html>

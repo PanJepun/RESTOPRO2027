@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Recovery 19 Menu</title></head>
+<body style="font-family:sans-serif;padding:20px">
+<h2>Recovery 19 Menu ke Firebase</h2>
+<button id="btn" style="padding:15px;background:red;color:#fff;border:none;border-radius:10px;font-weight:700">🚨 KEMBALIKAN 19 MENU KE FIREBASE</button>
+<div id="log"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+const cfg={apiKey:"AIzaSyD6r1mm0Fm0gIioG2UcWQZt0XJtHQj15iI",authDomain:"restopro2026-60038.firebaseapp.com",databaseURL:"https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"restopro2026-60038",appId:"1:336434967293:web:ba55b927cd01aa0229c494"};
+const db=getDatabase(initializeApp(cfg));
+
+const menus=[
+{id:"-PO7a1",nama:"Nasi Tempong",harga:15000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+{id:"-PO7a2",nama:"Es Teler 77",harga:25000,kategori:"minuman",gambar:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400"},
+{id:"-PO7a3",nama:"Kwetiao",harga:35000,kategori:"mie",gambar:"https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400"},
+{id:"-PO7a4",nama:"Soda Gembira",harga:17500,kategori:"minuman",gambar:"https://images.unsplash.com/photo-1624550213833-68e17502147f?w=400"},
+{id:"-PO7a5",nama:"Nasi Babi Guling",harga:40000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1534939561121-4a00ecc7d369?w=400"},
+{id:"-PO7a6",nama:"Sate Kambing Muda",harga:60000,kategori:"sate",gambar:"https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=400"},
+{id:"-PO7a7",nama:"Sate Hot Plate",harga:75000,kategori:"sate",gambar:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400"},
+{id:"-PO7a8",nama:"Bakmi Gang Kelinci",harga:35000,kategori:"mie",gambar:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400"},
+{id:"-PO7a9",nama:"Bir Bintang",harga:25000,kategori:"minuman",gambar:"https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400"},
+{id:"-PO7a10",nama:"Red Label",harga:400000,kategori:"minuman",gambar:"https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400"},
+{id:"-PO7a11",nama:"Black Label",harga:400000,kategori:"minuman",gambar:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400"},
+{id:"-PO7a12",nama:"Cah kangkung",harga:15000,kategori:"sayur",gambar:"https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400"},
+{id:"-PO7a13",nama:"Mie Panjang Umur",harga:65000,kategori:"mie",gambar:"https://images.unsplash.com/photo-1603133872875-ca2a2be0d5d5?w=400"},
+{id:"-PO7a14",nama:"Babi Guling Swari",harga:35000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=400"},
+{id:"-PO7a15",nama:"Nasi Campur babi",harga:25000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400"},
+{id:"-PO7a16",nama:"Nasi Kedewatan",harga:30000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400"},
+{id:"-PO7a17",nama:"Ayam Betutu",harga:75000,kategori:"ayam",gambar:"https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=400"},
+{id:"-PO7a18",nama:"Brokoli",harga:25000,kategori:"sayur",gambar:"https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400"},
+{id:"-PO7a19",nama:"Nasi Putih",harga:5000,kategori:"nasi",gambar:"https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=400"}
+];
+
+document.getElementById('btn').onclick=async()=>{
+  document.getElementById('log').innerHTML="⏳ Uploading...<br>";
+  for(let m of menus){
+    await set(ref(db,'menu/'+m.id),{nama:m.nama,harga:m.harga,kategori:m.kategori,gambar:m.gambar});
+    document.getElementById('log').innerHTML+=`✅ ${m.nama}<br>`;
+  }
+  // simpen juga ke local storage biar gak hilang lagi
+  localStorage.setItem('menuData',JSON.stringify(menus));
+  document.getElementById('log').innerHTML+=`<h3 style="color:green">✅ SELESAI! 19 MENU SUDAH BALIK! Cek Firebase & HP sekarang!</h3>`;
+};
+</script>
+</body></html>

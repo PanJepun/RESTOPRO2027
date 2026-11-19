@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Kasir - Order Masuk dari Selforder </title>
+  <style>
+    body{font-family:Arial; background:#222; color:white; padding:10px}
+  .card{background:#333; padding:15px; margin:10px 0; border-radius:10px; border-left:5px solid #ff6600}
+    button{padding:10px 16px; margin:5px; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold}
+  .debug{font-size:10px; color:#888; margin-bottom:10px}
+  </style>
+</head>
+<body>
+<h2>🔔 ORDER MASUK DARI SELFORDER CUSTOMER</h2>
+<div id="debug" class="debug">Loading...</div>
+<div id="orderList">Menunggu order...</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD6r1mm0Fm0gIioG2UcWQZt0XJtHQj15iI",
+    authDomain: "restopro2026-60038.firebaseapp.com",
+    databaseURL: "https://restopro2026-60038-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "restopro2026-60038",
+    storageBucket: "restopro2026-60038.firebasestorage.app",
+    messagingSenderId: "336434967293",
+    appId: "1:336434967293:web:ba55b927cd01aa0229c494"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// FIX: PISAH 3 RAW DATA, JANGAN 1 allOrders YANG NUMPUK!
+let rawOrders = {};
+let rawPesanan = {};
+let rawAntrian = {};
+
+onValue(ref(db, 'orders'), s=>{
+  rawOrders = s.val() || {};
+  render();
+});
+onValue(ref(db, 'pesanan'), s=>{
+  rawPesanan = s.val() || {};
+  render();
+});
+onValue(ref(db, 'antrian'), s=>{
+  rawAntrian = s.val() || {};
+  render();
+});
+
+function getAllOrders(){
+  // GABUNG BARU TIAP RENDER, JADI KALAU DIHAPUS LANGSUNG HILANG!
+  let combined = {};
+  Object.assign(combined, rawOrders);
+  Object.assign(combined, rawPesanan);
+  Object.assign(combined, rawAntrian);
+  // hapus duplikat: kalau id sama, ambil yang ada di orders dulu
+  return combined;
+}
+
+function render(){
+  let allOrders = getAllOrders();
+  document.getElementById('debug').textContent = `orders:${Object.keys(rawOrders).length} | pesanan:${Object.keys(rawPesanan).length} | antrian:${Object.keys(rawAntrian).length} | total gabung:${Object.keys(allOrders).length}`;
+
+  let byMeja = {};
+  for(let id in allOrders){
+    let o=allOrders[id];
+    if(!o) continue;
+    let st=(o.status||'').toString().toLowerCase();
+    if(st!=='baru') continue;
+    let meja=(o.meja||'').toString().toUpperCase().trim();
+    if(!meja) continue;
+    if(!byMeja[meja]) byMeja[meja]={meja:meja, items:[], total:0, catatan:[], ids:[], waktu:o.waktu||''};
+    let arr=Array.isArray(o.items)? o.items : Object.values(o.items||{});
+    byMeja[meja].items.push(...arr);
+    byMeja[meja].total+=o.total||0;
+    if(o.catatan) byMeja[meja].catatan.push(o.catatan);
+    byMeja[meja].ids.push(id);
+  }
+
+  let html="";
+  let keys=Object.keys(byMeja);
+  if(keys.length===0){
+    document.getElementById('orderList').innerHTML="<p>Tidak ada order baru</p>";
+    return;
+  }
+
+  for(let meja of keys){
+    let g=byMeja[meja];
+    let merged={};
+    g.items.forEach(it=>{
+      let k=(it.nama||it.name||'').toLowerCase();
+      if(merged[k]) merged[k].qty+=it.qty||1;
+      else merged[k]={nama:it.nama||it.name, harga:it.harga||it.price||0, qty:it.qty||1};
+    });
+    let finalItems=Object.values(merged);
+    let total=finalItems.reduce((a,b)=>a+b.harga*b.qty,0);
+    let itemsHtml=finalItems.map(it=>`<div>${it.nama} x${it.qty} - Rp ${(it.harga*it.qty).toLocaleString('id-ID')}</div>`).join('');
+
+    html+=`<div class="card" id="card-${meja}">
+      <b>Meja: ${g.meja}</b> | ${g.ids.length} order HP<br>
+      ${itemsHtml}
+      <b>Total: Rp ${total.toLocaleString('id-ID')}</b><br>
+      <button style="background:#007bff" onclick="prosesMeja('${meja}')">PROSES MEJA ${meja}</button>
+      <button style="background:#dc3545" onclick="tolakMeja('${meja}')">TOLAK MEJA ${meja}</button>
+    </div>`;
+  }
+  document.getElementById('orderList').innerHTML=html;
+}
+
+window.prosesMeja = async function(meja){
+  let allOrders=getAllOrders();
+  let ids=[];
+  let gabung=[];
+  let total=0;
+  let catatan=[];
+  let waktu='';
+
+  for(let id in allOrders){
+    let o=allOrders[id];
+    if((o.meja||'').toUpperCase()!==meja) continue;
+    if((o.status||'').toLowerCase()!=='baru') continue;
+    ids.push(id);
+    let arr=Array.isArray(o.items)? o.items : Object.values(o.items||{});
+    gabung.push(...arr);
+    total+=o.total||0;
+    if(o.catatan) catatan.push(o.catatan);
+    if(!waktu) waktu=o.waktu;
+  }
+
+  if(ids.length===0){ alert('Gak ada order meja '+meja); return; }
+
+  let merged={};
+  gabung.forEach(it=>{
+    let k=(it.nama||it.name||'').toLowerCase();
+    if(merged[k]) merged[k].qty+=it.qty||1;
+    else merged[k]={nama:it.nama||it.name, harga:it.harga||it.price||0, qty:it.qty||1};
+  });
+  let finalItems=Object.values(merged);
+  let finalTotal=finalItems.reduce((a,b)=>a+b.harga*b.qty,0);
+
+  let dataMeja={
+    meja:meja,
+    items:finalItems,
+    total:finalTotal,
+    catatan:catatan.join(' | '),
+    waktuMulai:waktu,
+    waktuProses:new Date().toISOString()
+  };
+
+  try{
+    // 1. PINDAH
+    await set(ref(db, 'mejaTertahan/' + meja), dataMeja);
+    // 2. HAPUS - onValue otomatis bakal trigger render() dan langsung hilang tanpa refresh!
+    for(let id of ids){
+      await remove(ref(db, 'orders/' + id));
+      await remove(ref(db, 'pesanan/' + id));
+      await remove(ref(db, 'antrian/' + id));
+    }
+    // 3. LANGSUNG HILANGKAN DARI LAYAR (OPTIMISTIC UI) - GAK PERLU TUNGGU FIREBASE
+    let card=document.getElementById('card-'+meja);
+    if(card){ card.style.opacity='0.3'; card.innerHTML='<b>Meja '+meja+' diproses...</b>'; setTimeout(()=>{ if(card) card.remove(); },500); }
+  }catch(err){
+    alert('Gagal: '+err.message);
+  }
+}
+
+window.tolakMeja = async function(meja){
+  if(!confirm('Yakin TOLAK Meja '+meja+'?')) return;
+  let allOrders=getAllOrders();
+  let ids=[];
+  for(let id in allOrders){
+    if((allOrders[id].meja||'').toUpperCase()===meja) ids.push(id);
+  }
+  for(let id of ids){
+    await remove(ref(db, 'orders/' + id));
+    await remove(ref(db, 'pesanan/' + id));
+    await remove(ref(db, 'antrian/' + id));
+  }
+  // LANGSUNG HILANG TANPA REFRESH
+  let card=document.getElementById('card-'+meja);
+  if(card) card.remove();
+}
+</script>
+</body>
+</html>
