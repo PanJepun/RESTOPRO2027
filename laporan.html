@@ -43,7 +43,7 @@ th{text-align:center; font-size:12px}
 <nav>
   <div class="logo">📦 RESTOPRO</div>
   <ul>
-    <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+    <li><a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
     <li><a href="master.html"><i class="fa-solid fa-box"></i> Menu</a></li>
     <li><a href="meja.html"><i class="fa-solid fa-chair"></i> Meja</a></li>
     <li><a href="kasir.html"><i class="fa-solid fa-cash-register"></i> Kasir</a></li>
@@ -227,7 +227,7 @@ th{text-align:center; font-size:12px}
       saveData(data);
       if(t.metode === 'CASH'){
         let jmlPetty = hapusPettyByBillId(t.id);
-        alert(`✅ Bill #${t.id} CASH dihapus + ${jmlPetty} petty cash ikut kehapus. WA owner terkirim beb.`);
+        alert(`✅ Bill #${t.id} CASH dihapus + ${jmlPetty} petty cash ikut kehapus.`);
       } else {
         alert(`✅ Transaksi #${t.id} ${t.metode} berhasil dihapus beb - WA terkirim (petty tidak ikut karena bukan CASH)`);
       }

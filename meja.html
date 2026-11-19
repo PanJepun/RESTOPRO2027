@@ -1,228 +1,276 @@
 <!DOCTYPE html>
-<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RESTOPRO - Kelola Meja FINAL</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>RESTOPRO - Kelola Meja</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-body{font-family:'Poppins',sans-serif;margin:0;background:#f1f5f9}
-.navbar{background:#0f172a;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+body{margin:0;font-family:Arial;background:#f1f5f9}
+.navbar{background:#0f172a;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
 .navbar a{color:#cbd5e1;text-decoration:none;font-size:13px;font-weight:500}
 .navbar a.active{color:#f97316}
-.container{padding:20px 30px}.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.form-row{display:flex;gap:10px;margin-bottom:15px;align-items:center;flex-wrap:wrap}
-input{padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px}
-.btn-simpan{background:#10b981;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer}
-.btn-fix{background:#f59e0b;color:#fff;border:none;padding:10px 16px;border-radius:6px;font-weight:700;cursor:pointer}
-table{width:100%;border-collapse:collapse}th{background:#1e293b;color:#fff;padding:12px;text-align:left;font-size:13px}
-td{border:1px solid #e2e8f0;padding:12px;font-size:13px;vertical-align:middle}
-.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}.badge-kosong{background:#dcfce7;color:#166534}.badge-pakai{background:#fee2e2;color:#991b1b}
-.btn-aksi{padding:6px 10px;border:none;border-radius:5px;cursor:pointer;font-size:12px;margin-right:4px;color:#fff}.btn-qr{background:#3b82f6}.btn-hapus{background:#ef4444}
-#modalQR{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:15px}
-.modalBox{background:#fff;padding:24px;border-radius:18px;text-align:center;max-width:380px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-#qrLarge{display:flex;justify-content:center;margin:15px 0;padding:15px;background:#fff;border:2px dashed #cbd5e1;border-radius:12px}
-.backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;}
-.backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
-.backup-bar button.sec{background:#334155;}
-</style></head><body>
-<div class="navbar">
-  <div style="font-weight:700;color:#f97316;">🍽️ RESTOPRO</div>
-  <div style="display:flex;gap:16px;flex-wrap:wrap;">
-    <a href="dashboard.html">📊 Dashboard</a>
-    <a href="master.html">📦 Master Data</a>
-    <a href="meja.html" class="active">🪑 Meja</a>
-    <a href="kasir.html">💼 Kasir</a>
-    <a href="kasorder.html">🔔 Order Cust</a>
-    <a href="pettycash.html">👛 Petty Cash</a>
-    <a href="laporan.html">📄 Laporan</a>
-    <a href="tools.html">⚙️ Tools</a>
-  </div>
-</div>
-<div class="backup-bar">
-  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
-  <span style="display:flex;gap:6px;align-items:center">
-    <span id="totalMeja" style="background:#0f172a;padding:4px 10px;border-radius:20px;">Total Meja: 0</span>
-    <button onclick="backupSekarang('manual')">Backup Manual</button>
-    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
-  </span>
-  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
-</div>
+.container{padding:20px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.trial-bar{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:10px 20px;font-size:13px;font-weight:bold;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.trial-bar.bahaya{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.trial-bar button{border:0;padding:7px 14px;border-radius:20px;font-weight:bold;cursor:pointer;background:#f59e0b;color:#fff}
+.backup-bar{background:#1e293b;color:#cbd5e1;font-size:12px;padding:8px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.backup-bar button{background:#f97316;border:0;padding:6px 10px;border-radius:20px;font-weight:700;cursor:pointer;color:#fff;font-size:11px}
+.backup-bar button.sec{background:#334155}
+.form-row{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;margin-bottom:20px}
+input,select{padding:12px;border:1px solid #cbd5e1;border-radius:8px;width:100%;box-sizing:border-box}
+label{font-size:12px;color:#64748b;margin-bottom:6px;display:block;font-weight:700;text-transform:uppercase}
+.btn-tambah{background:#f97316;color:#fff;border:0;padding:12px 20px;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap}
+table{width:100%;border-collapse:collapse}
+th{background:#0f172a;color:#fff;padding:12px;text-align:left;font-size:13px}
+td{padding:12px;border-bottom:1px solid #e2e8f0;font-size:14px;vertical-align:middle}
+.badge-kosong{background:#dcfce7;color:#166534;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge-terisi{background:#fee2e2;color:#991b1b;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.btn{border:0;padding:8px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-size:12px;color:#fff}
+.btn-edit{background:#2563eb}.btn-qr{background:#0284c7}.btn-hapus{background:#ef4444}
+.aksi{display:flex;gap:6px;flex-wrap:wrap}
+.qr-box{text-align:center}
+.qr-box img{width:90px;height:90px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;padding:4px}
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:15px}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;padding:20px;width:420px;max-width:100%}
+.trial-lock{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background:#0f172a;align-items:center;justify-content:center;padding:20px;text-align:center}
+.trial-lock.open{display:flex}.trial-lock-box{background:#fff;border-radius:16px;padding:30px;max-width:420px;width:100%}
+@media(max-width:700px){.form-row{grid-template-columns:1fr}.aksi{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="navbar"><div style="font-weight:700;color:#f97316">🍽️ RESTOPRO</div><div style="display:flex;gap:16px;flex-wrap:wrap"><a href="dashboard.html">📊 Dashboard</a><a href="master.html">📦 Master Data</a><a href="meja.html" class="active">🪑 Meja</a><a href="kasir.html">💼 Kasir</a><a href="kasorder.html">🔔 Order Cust</a><a href="pettycash.html">👛 Petty Cash</a><a href="laporan.html">📄 Laporan</a><a href="tools.html">⚙️ Tools</a></div></div>
+<div class="trial-bar" id="trialBar"><span id="trialText">⏳ Cek Masa Trial...</span><button onclick="window.open('https://wa.me/6282340152478?text=Halo%20Admin,%20mau%20perpanjang%20trial%20RESTOPRO','_blank')">Perpanjang Trial</button></div>
+<div class="backup-bar"><span id="statusBackup">⏳ Cek Backup...</span><span id="statusSimpan" style="color:#4ade80;font-weight:bold">💾 Tersimpan Otomatis</span><span style="display:flex;gap:6px"><button onclick="backupSekarang()">Backup</button><button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button></span><input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)"></div>
 <div class="container"><div class="card">
-<h2>🪑 Kelola Data Meja - FINAL LINK MENU</h2>
-<div class="form-row"><label>Nomor Meja</label><input id="nomorMeja" placeholder="Contoh: ANGGREK_BULAN"><label>Kapasitas</label><input id="kapasitas" type="number" value="10" style="width:100px"><button onclick="simpanMeja()" class="btn-simpan">💾 Simpan Meja</button><button onclick="fixDataLama()" class="btn-fix">🛠️ Fix Data Lama</button></div>
-<p style="font-size:12px;color:#64748b">✅ QR sekarang scan langsung buka <b>selforder.html?meja=NAMA_MEJA</b> beb! Data dari LocalStorage beb, bukan Firebase lagi!</p>
-<table><thead><tr><th>Nomor Meja</th><th>Kapasitas</th><th>Status</th><th>QR Menu</th><th>Aksi</th></tr></thead><tbody id="tbodyMeja"><tr><td colspan="5">Loading...</td></tr></tbody></table>
+<h2 style="margin-top:0">🪑 Kelola Meja</h2>
+<div style="background:#dcfce7;padding:10px;border-radius:8px;font-size:12px;margin-bottom:15px">✅ QR scan langsung buka selforder.html?meja=NAMA_MEJA beb! Hapus 1 meja, yang lain aman beb! Edit bisa save beb!</div>
+<div class="form-row">
+<div><label>Nomor Meja</label><input id="nomorMeja" placeholder="Contoh: 1, 2, VIP 1, A1"></div>
+<div><label>Kapasitas (Orang)</label><input type="number" id="kapasitasMeja" value="4" min="1"></div>
+<button class="btn-tambah" onclick="tambahMeja()">+ Tambah Meja</button>
+</div>
+<div style="overflow-x:auto"><table><thead><tr><th>Nomor Meja</th><th>Kapasitas</th><th>Status</th><th>QR Menu</th><th>Aksi</th></tr></thead><tbody id="tbodyMeja"></tbody></table></div>
+<div id="infoKosong" style="text-align:center;color:#64748b;padding:20px;display:none">Belum ada meja beb! Tambah di atas beb!</div>
 </div></div>
 
-<div id="modalQR" onclick="if(event.target===this) tutupModal()">
-<div class="modalBox">
-<div style="display:flex;justify-content:space-between;align-items:center"><b id="qrLabel" style="font-size:16px">MEJA</b><span onclick="tutupModal()" style="cursor:pointer;font-size:20px">✕</span></div>
-<div id="qrLarge"></div>
-<p id="qrLink" style="font-size:11px;color:#64748b;word-break:break-all;background:#f1f5f9;padding:8px;border-radius:6px;margin:8px 0"></p>
-<p style="font-size:12px;color:#10b981;font-weight:700;margin:6px 0">✅ Scan langsung buka Menu + Memo Popup</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-<button onclick="printQR()" style="background:#1e293b;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">🖨️ Print</button>
-<button onclick="downloadQR()" style="background:#3b82f6;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">⬇️ Download PNG</button>
-</div>
-<button onclick="testBuka()" style="width:100%;margin-top:8px;background:#10b981;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">🔗 Test Buka Link</button>
-<button onclick="tutupModal()" style="width:100%;margin-top:8px;background:#e2e8f0;border:none;padding:10px;border-radius:8px;cursor:pointer">Tutup</button>
-</div>
-</div>
+<div class="modal" id="modalEditMeja"><div class="modal-box">
+<h3 style="margin-top:0">✏️ Edit Meja</h3>
+<input type="hidden" id="eIdMeja">
+<input type="hidden" id="eKeyMeja">
+<div><label>Nomor Meja</label><input id="eNomorMeja" placeholder="Contoh: 1, VIP 1"></div>
+<div style="margin-top:12px"><label>Kapasitas (Orang)</label><input type="number" id="eKapasitasMeja" min="1"></div>
+<div style="background:#fff7ed;padding:10px;border-radius:8px;font-size:12px;margin-top:12px" id="eInfoMeja"></div>
+<div style="display:flex;gap:8px;margin-top:16px"><button onclick="tutupModalEdit()" style="flex:1;padding:12px;border:0;border-radius:8px;background:#e2e8f0;font-weight:700;cursor:pointer">Batal</button><button onclick="simpanEditMeja()" style="flex:1;padding:12px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer">💾 Simpan Perubahan</button></div>
+</div></div>
+
+<div class="modal" id="modalQR"><div class="modal-box" style="text-align:center">
+<h3 id="judulQR">QR Menu</h3>
+<div id="qrBesar" style="display:flex;justify-content:center;margin:15px 0"></div>
+<p id="linkQR" style="font-size:12px;word-break:break-all;color:#2563eb"></p>
+<p style="font-size:12px;color:#64748b">Beb, customer scan ini beb, langsung buka menu + order beb!</p>
+<div style="display:flex;gap:8px"><button onclick="tutupModalQR()" style="flex:1;padding:12px;border:0;border-radius:8px;background:#e2e8f0;font-weight:700;cursor:pointer">Tutup</button><button onclick="downloadQR()" style="flex:1;padding:12px;border:0;border-radius:8px;background:#10b981;color:#fff;font-weight:700;cursor:pointer">⬇️ Download QR</button></div>
+</div></div>
+
+<div class="trial-lock" id="trialLock"><div class="trial-lock-box"><div style="font-size:50px">🔒</div><h2>MASA TRIAL HABIS BEB!</h2><p>Masa trial 14 hari sudah berakhir beb.<br>Berakhir: <b>2026-12-03</b><br>Hubungi Admin untuk perpanjang beb!</p><button onclick="window.open('https://wa.me/6282340152478?text=Halo%20Admin,%20trial%20habis,%20mau%20perpanjang','_blank')" style="width:100%;padding:14px;border:0;border-radius:10px;background:#25D366;color:#fff;font-weight:bold;cursor:pointer">💬 Hubungi Admin</button></div></div>
 
 <script>
-  // ===== MEJA - 100% LOCALSTORAGE, TANPA FIREBASE! =====
-  const KEY_DATA = 'restopro_data_v1';
-  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
-  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
-  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
-  function loadData(){
-    let raw = localStorage.getItem(KEY_DATA);
-    if(!raw){
-      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], pettyCash:0 };
-      localStorage.setItem(KEY_DATA, JSON.stringify(awal));
-      return awal;
-    }
-    let data = JSON.parse(raw);
-    if(!data.mejaData){
-      // Migrasi kalau masih format lama: data.meja = {NAMA: {nomor, kapasitas}}
-      if(data.meja && typeof data.meja === 'object' && !Array.isArray(data.meja)){
-        data.mejaData = Object.keys(data.meja).map(k => {
-          let v = data.meja[k] || {};
-          let nomor = String(v.nomor || v.nama || k).toUpperCase().replace(/\s+/g,'_');
-          return { key: k, nomor, kapasitas: parseInt(v.kapasitas || 10) || 10 };
-        });
-      } else data.mejaData = [];
-    }
-    if(!data.orders) data.orders = [];
-    if(!data.transaksi) data.transaksi = [];
-    return data;
-  }
-  function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
-  function cekStatusSaja(){
-    let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
-    if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; }
-  }
-  function backupSekarang(mode){
-    let data = loadData(); let userLogin = localStorage.getItem('userLogin');
-    let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
-    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
-    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
-    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
-  }
-  function restoreFile(e){
-    let file = e.target.files[0]; if(!file) return;
-    let reader = new FileReader();
-    reader.onload = function(){
-      try{
-        let data = JSON.parse(reader.result);
-        if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin));
-        localStorage.setItem(KEY_DATA, JSON.stringify(data));
-        alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!');
-        location.reload();
-      }catch(err){ alert('File backup rusak beb!'); }
-    };
-    reader.readAsText(file);
-  }
+const TRIAL_AKHIR='2026-12-03';
+function cekTrial(){let today=new Date();today.setHours(0,0,0,0);let akhir=new Date(TRIAL_AKHIR+'T23:59:59');let sisa=Math.ceil((akhir-today)/(1000*60*60*24));let bar=document.getElementById('trialBar'),txt=document.getElementById('trialText');if(sisa<=0){document.getElementById('trialLock').classList.add('open');return false}if(sisa<=3){bar.classList.add('bahaya');txt.textContent='⚠️ TRIAL SEGERA HABIS! Sisa '+sisa+' hari beb! Berakhir '+TRIAL_AKHIR}else txt.textContent='🎁 MASA TRIAL: Sisa '+sisa+' hari beb! Berakhir '+TRIAL_AKHIR;return true}
+const KEY_DATA='restopro_data_v1';const KEY_BACKUP_LOG='restopro_backup_log_v1';const DB_NAME='RESTOPRO_TAHAN_LAMA';
+let _cacheData=null;
+if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
+function bukaDBTahanLama(){ return new Promise((res,rej)=>{ let req=indexedDB.open(DB_NAME,1); req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains('simpan')) req.result.createObjectStore('simpan'); }; req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); }); }
+async function simpanKeDB(data){ try{ let db=await bukaDBTahanLama(); return new Promise(r=>{ let tx=db.transaction('simpan','readwrite'); tx.objectStore('simpan').put(JSON.stringify(data),KEY_DATA); tx.oncomplete=()=>r(true); tx.onerror=()=>r(false); }); }catch(e){ return false; } }
+async function ambilDariDB(){ try{ let db=await bukaDBTahanLama(); return new Promise(r=>{ let tx=db.transaction('simpan','readonly'); let req=tx.objectStore('simpan').get(KEY_DATA); req.onsuccess=()=>r(req.result?JSON.parse(req.result):null); req.onerror=()=>r(null); }); }catch(e){ return null; } }
+function dataAwalBeb(){ return {toko:'RESTOPRO',dibuat:new Date().toISOString(),promo_videos:[],transaksi:[],orders:[],inventory:[],menuData:[],mejaData:[],mejaTertahan:{},users:[],konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro"},pettyCash:0,pettycash:[]}; }
+function loadData(){ if(_cacheData) return _cacheData; let raw=localStorage.getItem(KEY_DATA); if(raw){ try{ _cacheData=JSON.parse(raw); if(!_cacheData.mejaData) _cacheData.mejaData=[]; if(!_cacheData.mejaTertahan) _cacheData.mejaTertahan={}; return _cacheData; }catch(e){} } _cacheData=dataAwalBeb(); return _cacheData; }
+function saveData(d){ _cacheData=d; try{ localStorage.setItem(KEY_DATA,JSON.stringify(d)); }catch(e){} simpanKeDB(d); let el=document.getElementById('statusSimpan'); if(el) el.textContent='💾 Tersimpan Otomatis - '+new Date().toLocaleTimeString('id-ID'); }
+async function pulihkanDataSaatBuka(){ let dariDB=await ambilDariDB(); let dariLocal=localStorage.getItem(KEY_DATA); let dataLocal=dariLocal?JSON.parse(dariLocal):null; let hitung=(x)=>{ if(!x) return 0; return (x.transaksi?.length||0)+(x.menuData?.length||0)+(x.mejaData?.length||0); }; if(hitung(dataLocal)===0 && dariDB && hitung(dariDB)>0){ localStorage.setItem(KEY_DATA,JSON.stringify(dariDB)); _cacheData=dariDB; return true; } if(dataLocal && hitung(dataLocal)>0 && (!dariDB || hitung(dariDB)===0)){ await simpanKeDB(dataLocal); } if(dataLocal && dariDB && hitung(dariDB)>hitung(dataLocal)){ localStorage.setItem(KEY_DATA,JSON.stringify(dariDB)); _cacheData=dariDB; return true; } return false; }
+function tanggalHariIni(){let n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
+function buatNamaFile(){let now=new Date();return `RESTOPRO_${tanggalHariIni()}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}.json`}
+function backupSekarang(){let data=loadData();let nama=buatNamaFile();let tgl=tanggalHariIni();let log=JSON.parse(localStorage.getItem(KEY_BACKUP_LOG)||'{}');log[tgl]=nama;localStorage.setItem(KEY_BACKUP_LOG,JSON.stringify(log));let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nama;document.body.appendChild(a);a.click();a.remove();document.getElementById('statusBackup').textContent='✅ Backup Berhasil: '+nama}
+function restoreFile(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=function(){try{let d=JSON.parse(r.result);saveData(d);alert('Restore berhasil beb!');location.reload()}catch(err){alert('File backup rusak beb!')}};r.readAsText(f)}
 
-  let mejaData=[]; let orderAktif={}; const baseUrl="https://restopro2026.netlify.app/baru.html";
-  let currentQRLink=""; let currentQRNomor="";
+// ===== BEB, INI KUNCI PERBAIKANNYA BEB! =====
+// BEB, JANGAN PAKAI id BEB! PAKAI NOMOR MEJA BEB! NOMOR PASTI UNIK BEB!
+function normalNomor(n){ return String(n||'').trim().toUpperCase().replace(/\s+/g,'_'); }
+function keyMeja(m){ return normalNomor(m.nomor||m.nomorMeja||m.nama||m.id||''); }
+function getMejaList(){ let d=loadData(); return d.mejaData||[]; }
+function getBaseUrl(){ let u=window.location.href.split('/').slice(0,-1).join('/'); return u; }
 
-  function refreshData(){
-    let data = loadData();
-    mejaData = (data.mejaData || []).map(m => {
-      let nomor = String(m.nomor || m.nama || m.key || '').toUpperCase().replace(/\s+/g,'_');
-      if(nomor.startsWith('-P')) return null;
-      return { key: m.key || m.nomor || nomor, nomor, kapasitas: parseInt(m.kapasitas || 10) || 10 };
-    }).filter(Boolean);
+// BEB, INI PERBAIKAN OTOMATIS BEB! MEJA LAMA YANG ID-NYA KOSONG / KEMBAR BEB, LANGSUNG DIBENERIN BEB!
+function perbaikiMejaLamaBeb(){
+  let d=loadData();
+  let list=d.mejaData||[];
+  if(list.length===0) return;
+  let seen={};
+  let bersih=[];
+  let berubah=false;
+  list.forEach((m,i)=>{
+    let nomor=String(m.nomor||m.nomorMeja||m.nama||m.id||'').trim();
+    if(!nomor) { berubah=true; return; } // Beb, meja tanpa nomor beb, buang beb!
+    let k=normalNomor(nomor);
+    if(seen[k]){ berubah=true; return; } // Beb, meja kembar beb, buang yang duplikat beb!
+    seen[k]=true;
+    let baru={...m};
+    baru.nomor=nomor;
+    baru.nomorMeja=k;
+    baru.nama=nomor;
+    baru.id='MEJA_'+k; // Beb, ID baru beb, dari nomor beb, jadi unik beb!
+    baru.kapasitas=parseInt(m.kapasitas)||4;
+    if(JSON.stringify(m)!==JSON.stringify(baru)) berubah=true;
+    bersih.push(baru);
+  });
+  if(berubah){ d.mejaData=bersih; saveData(d); }
+}
 
-    // STATUS TERPAKAI dari orders + transaksi di LocalStorage
-    orderAktif = {};
-    let semuaOrder = [];
-    if(Array.isArray(data.orders)) semuaOrder = semuaOrder.concat(data.orders);
-    if(Array.isArray(data.transaksi)) semuaOrder = semuaOrder.concat(data.transaksi);
-    // Kalau orders masih object {id: {...}}
-    if(data.orders && !Array.isArray(data.orders) && typeof data.orders === 'object') semuaOrder = semuaOrder.concat(Object.values(data.orders));
-    semuaOrder.forEach(o => {
-      if(!o || !o.meja) return;
-      let st = String(o.status || '').toUpperCase();
-      if(!['SELESAI','BAYAR','LUNAS','DONE','CANCEL'].includes(st)){
-        orderAktif[String(o.meja).toUpperCase().replace(/\s+/g,'_')] = o.status;
-      }
-    });
-    render();
-  }
+function buatLinkQR(nomorKey){ return getBaseUrl()+'/selforder.html?meja='+encodeURIComponent(nomorKey); }
+function buatImgQR(link, ukuran){
+  return 'https://api.qrserver.com/v1/create-qr-code/?size='+(ukuran||'120')+'x'+(ukuran||'120')+'&margin=5&color=000000&bgcolor=ffffff&data='+encodeURIComponent(link);
+}
+function renderMeja(){
+  perbaikiMejaLamaBeb();
+  let list=getMejaList();
+  let d=loadData();
+  let tertahan=d.mejaTertahan||{};
+  let tbody=document.getElementById('tbodyMeja');
+  document.getElementById('infoKosong').style.display=list.length===0?'block':'none';
+  if(list.length===0){ tbody.innerHTML=''; return; }
+  tbody.innerHTML=list.map((m)=>{
+    let nomor=String(m.nomor||m.nama||m.nomorMeja||'').trim();
+    let k=keyMeja(m);
+    let kapasitas=m.kapasitas||4;
+    let terisi=!!tertahan[k] || !!tertahan[nomor];
+    let linkQR=buatLinkQR(k);
+    let imgQR=buatImgQR(linkQR, 120);
+    // BEB, INI PENTING BEB! KIRIM KEY-nya BEB, BUKAN ID-nya BEB!
+    let keyAman=encodeURIComponent(k);
+    return `<tr>
+      <td><b>${nomor}</b></td>
+      <td>${kapasitas} Orang</td>
+      <td>${terisi?'<span class="badge-terisi">Terisi</span>':'<span class="badge-kosong">Kosong</span>'}</td>
+      <td><div class="qr-box"><img src="${imgQR}" alt="QR Meja ${nomor}" loading="eager"><div style="font-size:10px;color:#64748b;margin-top:4px">Scan untuk order<br><span style="color:#2563eb">${nomor}</span></div></div></td>
+      <td><div class="aksi">
+        <button class="btn btn-edit" onclick="bukaEditMeja('${k}')">✏️ Edit</button>
+        <button class="btn btn-qr" onclick="bukaQR('${k}')">📱 QR Menu</button>
+        <button class="btn btn-hapus" onclick="hapusMeja('${k}')">Hapus</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function tambahMeja(){
+  let nomor=document.getElementById('nomorMeja').value.trim();
+  let kap=parseInt(document.getElementById('kapasitasMeja').value)||4;
+  if(!nomor) return alert('Isi Nomor Meja dulu beb!');
+  let d=loadData();
+  let list=d.mejaData||[];
+  let k=normalNomor(nomor);
+  let sudah=list.find(x=> keyMeja(x)===k );
+  if(sudah) return alert('Meja '+nomor+' sudah ada beb! Pakai nomor lain beb!');
+  list.push({id:'MEJA_'+k, nomor:nomor, nomorMeja:k, nama:nomor, kapasitas:kap, created:Date.now()});
+  d.mejaData=list; saveData(d);
+  document.getElementById('nomorMeja').value=''; document.getElementById('kapasitasMeja').value=4;
+  renderMeja();
+  alert('✅ Meja '+nomor+' berhasil ditambah beb!');
+}
 
-  window.simpanMeja=function(){
-    let n=document.getElementById('nomorMeja').value.trim().toUpperCase().replace(/\s+/g,'_');
-    let k=document.getElementById('kapasitas').value||10;
-    if(!n) return alert('Isi nomor meja beb!');
-    if(n.startsWith('-P')) return alert('Jangan pakai -P beb!');
-    let data = loadData();
-    // Kalau udah ada, update kapasitasnya aja beb, jangan dobel!
-    let idx = (data.mejaData || []).findIndex(m => String(m.nomor).toUpperCase() === n);
-    if(idx >= 0){
-      data.mejaData[idx].kapasitas = parseInt(k);
-    } else {
-      data.mejaData.push({ key: n, nama: n, nomor: n, kapasitas: parseInt(k), aktif: true, created: Date.now() });
-    }
-    saveData(data);
-    document.getElementById('nomorMeja').value='';
-    refreshData();
+// ===== BEB, EDIT-nya BEB, PAKAI KEY BEB, BUKAN ID BEB! =====
+function bukaEditMeja(kunci){
+  let k=normalNomor(decodeURIComponent(kunci));
+  let list=getMejaList();
+  let m=list.find(x=> keyMeja(x)===k );
+  if(!m) return alert('Meja '+k+' nggak ketemu beb! Coba refresh beb!');
+  document.getElementById('eIdMeja').value=m.id||('MEJA_'+k);
+  document.getElementById('eKeyMeja').value=k; // Beb, ini kunci aslinya beb, buat cari pas save beb!
+  document.getElementById('eNomorMeja').value=m.nomor||m.nama||k;
+  document.getElementById('eKapasitasMeja').value=m.kapasitas||4;
+  let d=loadData();
+  let tertahan=d.mejaTertahan||{};
+  let terisi=!!tertahan[k];
+  document.getElementById('eInfoMeja').innerHTML= terisi ? '⚠️ Meja ini lagi <b>TERISI</b> beb! Kalau beb ganti nomornya beb, pesanan yang lagi jalan ikut pindah beb!' : '✅ Meja ini <b>KOSONG</b> beb, aman di-edit beb! Edit Meja: <b>'+k+'</b>';
+  document.getElementById('modalEditMeja').classList.add('open');
+}
+function tutupModalEdit(){ document.getElementById('modalEditMeja').classList.remove('open'); }
+function simpanEditMeja(){
+  let keyLama=normalNomor(document.getElementById('eKeyMeja').value);
+  let nomorBaru=document.getElementById('eNomorMeja').value.trim();
+  let kapBaru=parseInt(document.getElementById('eKapasitasMeja').value)||4;
+  if(!keyLama) return alert('Meja aslinya nggak kebaca beb! Tutup, buka lagi beb!');
+  if(!nomorBaru) return alert('Nomor meja nggak boleh kosong beb!');
+  if(kapBaru<1) return alert('Kapasitas minimal 1 beb!');
+  let d=loadData();
+  let list=d.mejaData||[];
+  // BEB, CARI PAKAI KEY BEB, BUKAN ID BEB! JADI KETEMU PASTI BEB!
+  let idx=list.findIndex(x=> keyMeja(x)===keyLama);
+  if(idx<0) return alert('Meja '+keyLama+' nggak ketemu beb! Refresh dulu beb, terus edit lagi beb!');
+  let nomorBaruKey=normalNomor(nomorBaru);
+  // Beb, cek duplikat beb, kecuali dirinya sendiri beb!
+  let duplikat=list.find((x,i)=> i!==idx && keyMeja(x)===nomorBaruKey );
+  if(duplikat) return alert('Nomor '+nomorBaru+' sudah dipakai meja lain beb! Ganti yang lain beb!');
+  // Beb, kalau nomor berubah beb, pindahkan pesanan yang tertahan beb!
+  if(nomorBaruKey!==keyLama && d.mejaTertahan && d.mejaTertahan[keyLama]){
+    d.mejaTertahan[nomorBaruKey]=d.mejaTertahan[keyLama];
+    d.mejaTertahan[nomorBaruKey].meja=nomorBaruKey;
+    delete d.mejaTertahan[keyLama];
   }
-  window.fixDataLama=function(){
-    if(!confirm('Hapus data rusak -Pxxxx beb?')) return;
-    let data = loadData();
-    let sebelum = (data.mejaData || []).length;
-    data.mejaData = (data.mejaData || []).filter(m => {
-      let nomor = String(m.nomor || m.key || '');
-      let key = String(m.key || '');
-      return !nomor.startsWith('-P') && !key.startsWith('-P');
-    });
-    saveData(data);
-    alert('Done beb! Dihapus ' + (sebelum - data.mejaData.length) + ' data rusak beb!');
-    refreshData();
-  }
-  window.render=function(){
-    let tbody=document.getElementById('tbodyMeja');
-    let elTotal = document.getElementById('totalMeja');
-    if(elTotal) elTotal.textContent = 'Total Meja: ' + mejaData.length;
-    if(mejaData.length==0){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8">Belum ada meja beb - Tambah di atas dulu beb!</td></tr>'; return; }
-    tbody.innerHTML=mejaData.map(m=>{
-      let isPakai=orderAktif[m.nomor];
-      let status=isPakai? `<span class="badge badge-pakai">Terpakai</span>`:`<span class="badge badge-kosong">Kosong</span>`;
-      return `<tr><td><b>${m.nomor}</b></td><td>${m.kapasitas} Orang</td><td>${status}</td><td><div id="qr-${m.nomor}" style="cursor:pointer" onclick="previewQR('${m.nomor}')"></div></td><td><button class="btn-aksi btn-qr" onclick="previewQR('${m.nomor}')">📱 QR Menu</button><button class="btn-aksi btn-hapus" onclick="hapusMeja('${m.key}')">Hapus</button></td></tr>`;
-    }).join('');
-    setTimeout(()=>{ mejaData.forEach(m=>{ let el=document.getElementById(`qr-${m.nomor}`); if(el){ el.innerHTML=''; new QRCode(el,{text:`${baseUrl}?meja=${encodeURIComponent(m.nomor)}`,width:70,height:70}); } }); },300);
-  }
-  window.previewQR=function(nomor){
-    currentQRNomor=nomor; currentQRLink=`${baseUrl}?meja=${encodeURIComponent(nomor)}`;
-    document.getElementById('qrLabel').innerText=`MEJA ${nomor.replace(/_/g,' ')}`;
-    document.getElementById('qrLink').innerText=currentQRLink;
-    document.getElementById('qrLarge').innerHTML='';
-    new QRCode(document.getElementById('qrLarge'),{text:currentQRLink,width:220,height:220,correctLevel:QRCode.CorrectLevel.H});
-    document.getElementById('modalQR').style.display='flex';
-  }
-  window.tutupModal=function(){ document.getElementById('modalQR').style.display='none'; }
-  window.printQR=function(){
-    let qr=document.getElementById('qrLarge').innerHTML;
-    let w=window.open('','_blank');
-    w.document.write(`<html><head><title>QR ${currentQRNomor}</title><style>body{font-family:Poppins,sans-serif;text-align:center;padding:30px}h1{font-size:28px;margin-bottom:10px}.box{display:flex;justify-content:center;margin:20px 0}small{color:#64748b}</style></head><body><h1>MEJA ${currentQRNomor.replace(/_/g,' ')}</h1><div class="box">${qr}</div><p><b>Scan untuk Buka Menu</b></p><small>${currentQRLink}</small><p style="margin-top:20px;font-size:12px">restopro2026.netlify.app</p><script>window.onload=()=>window.print()<\/script></body></html>`);
-    w.document.close();
-  }
-  window.downloadQR=function(){
-    let canvas=document.querySelector('#qrLarge canvas');
-    if(!canvas){ alert('QR belum siap beb!'); return; }
-    let a=document.createElement('a'); a.download=`QR-${currentQRNomor}.png`; a.href=canvas.toDataURL('image/png'); a.click();
-  }
-  window.testBuka=function(){ window.open(currentQRLink,'_blank'); }
-  window.hapusMeja=function(key){
-    if(confirm(`Hapus meja ${key} beb?`)){
-      let data = loadData();
-      data.mejaData = (data.mejaData || []).filter(m => String(m.key) !== String(key) && String(m.nomor) !== String(key));
-      saveData(data);
-      refreshData();
-    }
-  }
+  // Beb, timpa datanya beb, jangan bikin baru beb!
+  list[idx].id='MEJA_'+nomorBaruKey;
+  list[idx].nomor=nomorBaru;
+  list[idx].nomorMeja=nomorBaruKey;
+  list[idx].nama=nomorBaru;
+  list[idx].kapasitas=kapBaru;
+  d.mejaData=list;
+  saveData(d);
+  tutupModalEdit();
+  renderMeja();
+  alert('✅ Meja berhasil di-edit beb! Jadi '+nomorBaru+' - '+kapBaru+' Orang beb! Refresh kasir juga beb, biar ikut berubah beb!');
+}
 
-  cekStatusSaja();
-  refreshData();
-</script></body></html>
+// ===== BEB, HAPUS-nya BEB, HAPUS CUMA 1 BEB, PAKAI KEY BEB! =====
+function hapusMeja(kunci){
+  let k=normalNomor(decodeURIComponent(kunci));
+  let list=getMejaList();
+  let m=list.find(x=> keyMeja(x)===k );
+  if(!m) return alert('Meja '+k+' nggak ketemu beb!');
+  let d=loadData();
+  if(d.mejaTertahan && d.mejaTertahan[k]) return alert('❌ Meja ini lagi TERISI beb! Selesaikan dulu pesanannya beb, baru bisa hapus beb!');
+  if(!confirm('Hapus Meja '+(m.nomor||k)+' aja beb? Yang lain nggak ikut kehapus beb!')) return;
+  // BEB, INI PERBAIKANNYA BEB! DULU: filter pakai id (undefined semua, kehapus semua) BEB!
+  // BEB, SEKARANG: filter pakai KEY beb, cuma yang sama aja yang kehapus beb!
+  let sebelum=list.length;
+  d.mejaData=list.filter(x=> keyMeja(x)!==k);
+  saveData(d);
+  renderMeja();
+  alert('✅ Meja '+k+' terhapus beb! Sisa '+(sebelum-1)+' meja beb, yang lain aman beb!');
+}
+let qrMejaAktif='';
+let qrLinkAktif='';
+let qrImgAktif='';
+function bukaQR(kunci){
+  let k=normalNomor(decodeURIComponent(kunci));
+  let m=getMejaList().find(x=> keyMeja(x)===k );
+  if(!m) return alert('Meja nggak ketemu beb!');
+  qrMejaAktif=m.nomor||k;
+  qrLinkAktif=buatLinkQR(k);
+  qrImgAktif=buatImgQR(qrLinkAktif, 250);
+  document.getElementById('judulQR').textContent='QR Menu - Meja '+qrMejaAktif;
+  document.getElementById('linkQR').textContent=qrLinkAktif;
+  document.getElementById('modalQR').classList.add('open');
+  document.getElementById('qrBesar').innerHTML='<img src="'+qrImgAktif+'" style="width:250px;height:250px;border:1px solid #e2e8f0;border-radius:12px;padding:8px;background:#fff" alt="QR Meja '+qrMejaAktif+'">';
+}
+function tutupModalQR(){ document.getElementById('modalQR').classList.remove('open'); }
+function downloadQR(){
+  fetch(qrImgAktif).then(r=>r.blob()).then(b=>{
+    let a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download='QR-Meja-'+qrMejaAktif+'.png';
+    a.click();
+  }).catch(()=>{ window.open(qrImgAktif,'_blank'); });
+}
+(async()=>{ let pulih=await pulihkanDataSaatBuka(); if(pulih){ location.reload(); return; } cekTrial(); renderMeja(); })();
+window.addEventListener('beforeunload',()=>{ if(_cacheData) simpanKeDB(_cacheData); });
+</script>
+</body>
+</html>
