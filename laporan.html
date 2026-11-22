@@ -36,6 +36,7 @@ th{text-align:center; font-size:12px}
 .backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between; margin:0 30px; margin-top:15px; border-radius:10px;}
 .backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px;}
 .backup-bar button.sec{background:#334155;}
+.printer-info{background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:12px; font-weight:700; padding:9px 12px; border-radius:8px; margin-bottom:15px;}
 @media(max-width:900px){ .filter-row{grid-template-columns:1fr 1fr;} }
 </style>
 </head>
@@ -61,6 +62,7 @@ th{text-align:center; font-size:12px}
 <div class="container">
   <div class="card">
     <h3><i class="fa-solid fa-chart-pie" style="color:#9333ea;"></i> Laporan Omset & Penjualan</h3>
+    <div class="printer-info" id="infoPrinterAktif">🖨️ Printer Aktif: Loading...</div>
     <div class="stats-laporan">
       <div class="stat-laporan border-green"><h4 id="totalPendapatan">Rp 0</h4><p>TOTAL PENDAPATAN (FILTER)</p></div>
       <div class="stat-laporan border-blue"><h4 id="jumlahTransaksi">0</h4><p>JUMLAH TRANSAKSI (FILTER)</p></div>
@@ -91,15 +93,31 @@ th{text-align:center; font-size:12px}
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-  // ===== LAPORAN - 100% LOCALSTORAGE, TANPA FIREBASE! =====
   const KEY_DATA = 'restopro_data_v1';
   const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
   function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
   function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+
+  // ===== PRINTER DINAMIS BEB! BACA DARI TOOLS > SETUP PRINTER BEB! =====
+  function getPrinterSetup(){
+    let data = loadData();
+    return data.konfigurasi?.printer || {laporan:"", kasir:"", ukuranStruk:"80mm"};
+  }
+  function tampilkanPrinterAktif(){
+    let p = getPrinterSetup();
+    let el = document.getElementById('infoPrinterAktif');
+    if(!el) return;
+    if(p.laporan){
+      el.textContent = '🖨️ Printer Aktif: ' + p.laporan + ' (A4) - Setting dari Tools beb!';
+    } else {
+      el.textContent = '🖨️ Printer Aktif: Belum di-setting beb! Setting di Tools > Setup Printer beb!';
+    }
+  }
+
   function loadData(){
     let raw = localStorage.getItem(KEY_DATA);
     if(!raw){
-      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro"}, pettyCash:0, pettycash:[] };
+      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro",printer:{laporan:"",kasir:"",ukuranStruk:"80mm"}}, pettyCash:0, pettycash:[] };
       localStorage.setItem(KEY_DATA, JSON.stringify(awal)); return awal;
     }
     let data = JSON.parse(raw);
@@ -112,26 +130,25 @@ th{text-align:center; font-size:12px}
       let keys = Object.keys(data.pettycash).filter(k => k !== 'saldo');
       data.pettycash = keys.length > 0 ? keys.map(k => ({ id: k, ...data.pettycash[k] })) : [];
     }
+    if(!data.konfigurasi) data.konfigurasi = {ppn:11,bill:"BILL-0001",nama:"RestoPro",printer:{laporan:"",kasir:"",ukuranStruk:"80mm"}};
+    if(!data.konfigurasi.printer) data.konfigurasi.printer = {laporan:"",kasir:"",ukuranStruk:"80mm"};
     return data;
   }
   function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
   function cekStatusSaja(){ let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup'); if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; } }
   function backupSekarang(mode){ let data = loadData(); let userLogin = localStorage.getItem('userLogin'); let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() }; let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log)); let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove(); document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile; }
   function restoreFile(e){ let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(){ try{ let data = JSON.parse(reader.result); if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin)); localStorage.setItem(KEY_DATA, JSON.stringify(data)); alert('Restore berhasil beb!'); location.reload(); }catch(err){ alert('File backup rusak beb!'); } }; reader.readAsText(file); }
-
   const WA_TOKEN = "AHdnAppaZGYiKcaWt1JH"; const NOMOR_OWNER = "6282340152478";
   let transaksiData = []; let userData = []; let dataTampil = [];
-
   function refreshDariLocal(){
     let data = loadData();
     transaksiData = (data.transaksi || []).map((t, i) => ({ key: t.key || t.id || ('T'+i+'-'+(t.created||Date.now())), ...t }));
     userData = data.users || [];
     transaksiData.sort((a,b)=> parseWaktu(b.waktu) - parseWaktu(a.waktu));
+    tampilkanPrinterAktif();
     loadAwal();
   }
-
   async function kirimNotifikasiWA(pesan) { try { await fetch("https://api.fonnte.com/send", { method: "POST", headers: { "Authorization": WA_TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ target: NOMOR_OWNER, message: pesan }) }); } catch (e) {} }
-
   function parseWaktu(waktuStr){
     if(!waktuStr) return new Date(0);
     try{
@@ -141,7 +158,6 @@ th{text-align:center; font-size:12px}
       return new Date(y,m,d,hh,mm,ss);
     } catch(e){ return new Date(0); }
   }
-
   function normalRole(r){ return String(r||'').toLowerCase().replace(/[^a-z]/g,''); }
   function loadAwal(){
     let waitressDariUser = userData.filter(u => normalRole(u.role).includes('waitress') || normalRole(u.role).includes('waiter') || normalRole(u.role).includes('pelayan')).map(u => u.nama);
@@ -161,7 +177,6 @@ th{text-align:center; font-size:12px}
     if(dataTampil.length===0) dataTampil = [...transaksiData];
     renderTabel();
   }
-
   function filterData(){
     let dariVal = document.getElementById('dariTanggal').value; let sampaiVal = document.getElementById('sampaiTanggal').value; let waitressVal = document.getElementById('filterWaitress').value; let kasirVal = document.getElementById('filterKasir').value; let metodeVal = document.getElementById('filterMetode').value;
     let dariDate = dariVal? new Date(dariVal+"T00:00:00") : null; let sampaiDate = sampaiVal? new Date(sampaiVal+"T23:59:59") : null;
@@ -176,12 +191,10 @@ th{text-align:center; font-size:12px}
     renderTabel();
   }
   ['dariTanggal','sampaiTanggal','filterWaitress','filterKasir','filterMetode'].forEach(id=>document.getElementById(id).addEventListener("change", filterData));
-
   window.setQuick = function(type, ev){
     if(ev && ev.target){ document.querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active')); ev.target.classList.add('active'); }
     let now = new Date(); if(type==='today'){ let iso = now.toISOString().split('T')[0]; document.getElementById('dariTanggal').value = iso; document.getElementById('sampaiTanggal').value = iso; } else if(type==='week'){ let start = new Date(now); start.setDate(now.getDate() - now.getDay()); document.getElementById('dariTanggal').value = start.toISOString().split('T')[0]; document.getElementById('sampaiTanggal').value = now.toISOString().split('T')[0]; } else if(type==='month'){ let start = new Date(now.getFullYear(), now.getMonth(), 1); document.getElementById('dariTanggal').value = start.toISOString().split('T')[0]; document.getElementById('sampaiTanggal').value = now.toISOString().split('T')[0]; } else { document.getElementById('dariTanggal').value=""; document.getElementById('sampaiTanggal').value=""; } filterData();
   }
-
   function renderTabel(){
     let total = dataTampil.reduce((a,b)=>a+(b.total||0),0);
     document.getElementById('totalPendapatan').textContent = "Rp " + Math.round(total).toLocaleString("id-ID");
@@ -193,7 +206,6 @@ th{text-align:center; font-size:12px}
       return `<tr><td>#${t.id}</td><td>${t.waktu}</td><td><span class="badge">${t.kasir||'-'}</span></td><td>${t.waitress||'-'}</td><td>${t.metode||'CASH'}${t.referensi? '<br><small>'+t.referensi+'</small>':''}</td><td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${rincian}">${rincian}</td><td>Rp ${Math.round(t.total||0).toLocaleString("id-ID")}</td><td style="text-align:center;"><button onclick="hapusSatu('${t.key}')" style="background:#dc2626; color:#fff; border:none; padding:5px 8px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>`
     }).join("");
   }
-
   function hapusPettyByBillId(billId){
     try{
       let data = loadData();
@@ -211,7 +223,6 @@ th{text-align:center; font-size:12px}
       return terhapus;
     }catch(e){ return 0; }
   }
-
   window.hapusSatu = function(key){
     if(confirm(`Yakin mau hapus transaksi ini beb?`)){
       let data = loadData();
@@ -235,9 +246,7 @@ th{text-align:center; font-size:12px}
       refreshDariLocal();
     }
   }
-
   window.resetFilter = function(){ document.getElementById('dariTanggal').value=""; document.getElementById('sampaiTanggal').value=""; document.getElementById('filterWaitress').value=""; document.getElementById('filterKasir').value=""; document.getElementById('filterMetode').value=""; document.querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active')); document.getElementById('infoFilter').textContent=""; dataTampil = [...transaksiData]; renderTabel(); }
-
   window.exportExcel = function(){
     if(dataTampil.length==0){alert("Data kosong beb"); return;}
     let ws_data = [["No Bill","Tanggal","Kasir","Waitress","Metode","Referensi","Menu","Total"]];
@@ -246,21 +255,23 @@ th{text-align:center; font-size:12px}
     let ws = XLSX.utils.aoa_to_sheet(ws_data); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Laporan");
     let namaFile = `Laporan_${document.getElementById('dariTanggal').value||'awal'}_sd_${document.getElementById('sampaiTanggal').value||'akhir'}.xlsx`; XLSX.writeFile(wb, namaFile);
   }
-
   window.cetakDetail = function(){
     if(dataTampil.length==0){alert("Data kosong beb"); return;}
+    let p = getPrinterSetup();
+    let namaPrinter = p.laporan || 'Belum di-setting di Tools beb!';
     let dari = document.getElementById('dariTanggal').value? new Date(document.getElementById('dariTanggal').value).toLocaleDateString("id-ID",{day:'numeric', month:'long', year:'numeric'}) : "Awal";
     let sampai = document.getElementById('sampaiTanggal').value? new Date(document.getElementById('sampaiTanggal').value).toLocaleDateString("id-ID",{day:'numeric', month:'long', year:'numeric'}) : "Akhir";
     let waitressF = document.getElementById('filterWaitress').value || "Semua"; let kasirF = document.getElementById('filterKasir').value || "Semua"; let metodeF = document.getElementById('filterMetode').value || "Semua";
     let totalSemua = dataTampil.reduce((a,b)=>a+b.total,0);
     let win = window.open('', '', 'height=700,width=900');
-    win.document.write('<html><head><title>Laporan Detail</title>'); win.document.write('<style>body{font-family: "Courier New", monospace; font-size:9px; padding:10px; margin:0;}.judul{text-align:center; margin-bottom:8px;}.judul h3{margin:0; font-size:13px;}.judul p{margin:2px 0; font-size:9px;} table{width:100%; border-collapse:collapse;} th{border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 2px; text-align:left; font-weight:bold;} td{padding:3px 2px; border-bottom:1px dotted #ddd}.kanan{text-align:right;}.total-row td{border-top:2px solid #000; font-weight:bold; font-size:11px;}</style>'); win.document.write('</head><body>');
-    win.document.write(`<div class="judul"><h3>LAPORAN PENJUALAN RESTOPRO</h3><p>PERIODE: ${dari} sd ${sampai} | WAITRESS: ${waitressF} | KASIR: ${kasirF} | METODE: ${metodeF}</p><p>Dicetak: ${new Date().toLocaleString('id-ID')}</p></div>`);
+    win.document.write('<html><head><title>Laporan Detail</title>'); win.document.write('<style>@page{size:A4;margin:15mm} body{font-family: Arial, sans-serif; font-size:12px; padding:10px; margin:0;}.judul{text-align:center; margin-bottom:12px;}.judul h3{margin:0; font-size:18px;}.judul p{margin:3px 0; font-size:12px;} table{width:100%; border-collapse:collapse;} th{border-top:1px solid #000; border-bottom:1px solid #000; padding:6px 4px; text-align:left; font-weight:bold; font-size:12px;} td{padding:5px 4px; border-bottom:1px dotted #ccc} .kanan{text-align:right;}.total-row td{border-top:2px solid #000; font-weight:bold; font-size:13px;}</style>'); win.document.write('</head><body>');
+    win.document.write(`<div class="judul"><h3>LAPORAN PENJUALAN RESTOPRO</h3><p>PERIODE: ${dari} sd ${sampai} | WAITRESS: ${waitressF} | KASIR: ${kasirF} | METODE: ${metodeF}</p><p>Dicetak: ${new Date().toLocaleString('id-ID')} | Printer: ${namaPrinter} (A4)</p></div>`);
     win.document.write('<table><thead><tr><th>Tgl</th><th>No Bill</th><th>Kasir</th><th>Waitress</th><th>Metode</th><th>Menu</th><th class="kanan">Total</th></tr></thead><tbody>');
     dataTampil.forEach(t=>{ let dt = parseWaktu(t.waktu); let tglFix = dt.toLocaleDateString('id-ID'); let rincian = (t.items||[]).map(i=>`${i.nama} x${i.qty}`).join(", "); win.document.write(`<tr><td>${tglFix}</td><td>#${t.id}</td><td>${t.kasir}</td><td>${t.waitress}</td><td>${t.metode||'CASH'}</td><td>${rincian}</td><td class="kanan">Rp ${Math.round(t.total).toLocaleString("id-ID")}</td></tr>`); });
-    win.document.write(`</tbody><tfoot><tr class="total-row"><td colspan="6" class="kanan">TOTAL ${dataTampil.length} TRANSAKSI</td><td class="kanan">Rp ${Math.round(totalSemua).toLocaleString("id-ID")}</td></tr></tfoot></table>`); win.document.write('<div style="margin-top:15px; text-align:center; font-size:8px">--- Terima Kasih ---</div></body></html>'); win.document.close(); win.print();
+    win.document.write(`</tbody><tfoot><tr class="total-row"><td colspan="6" class="kanan">TOTAL ${dataTampil.length} TRANSAKSI</td><td class="kanan">Rp ${Math.round(totalSemua).toLocaleString("id-ID")}</td></tr></tfoot></table>`); win.document.write('<div style="margin-top:15px; text-align:center; font-size:10px">--- Terima Kasih ---</div></body></html>'); win.document.close();
+    if(namaPrinter !== 'Belum di-setting di Tools beb!'){ alert('Beb, pilih printer ini di dialog Print beb: ' + namaPrinter + ' (A4)'); }
+    win.print();
   }
-
   cekStatusSaja();
   refreshDariLocal();
 </script>

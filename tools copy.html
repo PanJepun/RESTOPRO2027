@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>RESTOPRO - Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{font-family: 'Poppins'; margin:0; background:#e6ecf3;}
+nav{background:#1e293b; color:#fff; padding:8px 20px; display:flex; align-items:center; justify-content:space-between;}
+nav ul{display:flex; gap:5px; list-style:none; margin:0; padding:0; flex-wrap:wrap;}
+nav ul li a{color:#cbd5e1; text-decoration:none; padding:8px 12px; font-size:13px; border-radius:6px;}
+nav ul li a.active{background:#10b981; color:#fff;}
+.container{padding:20px 30px;}.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+.card{background:#fff; border-radius:12px; padding:20px;}
+.card h2{font-size:16px; margin:0 0 15px 0; font-weight:700; border-bottom:1px solid #eee; padding-bottom:10px;}
+.form-group{margin-bottom:12px;}
+.form-group label{font-size:12px; color:#64748b; display:block; margin-bottom:4px; text-transform:uppercase;}
+input, select, button{padding:10px; border:1px solid #cbd5e1; border-radius:6px; width:100%; box-sizing:border-box; font-family: 'Poppins';}
+.btn-hijau{background:#10b981; color:#fff; border:none; font-weight:700; cursor:pointer;}
+table{width:100%; border-collapse:collapse; margin-top:10px;}
+th{background:#1e293b; color:#fff; padding:10px; text-align:left; font-size:13px;}
+td{border-bottom:1px solid #e2e8f0; padding:10px; font-size:13px;}
+.role-badge{background:#e2e8f0; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;}
+.td-aksi{display:flex; gap:8px;}
+.btn-aksi-kecil{padding:6px 12px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; width:auto;}
+.btn-edit-kecil{background:#f59e0b; color:#fff;}.btn-delete-kecil{background:#ef4444; color:#fff;}
+.backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;}
+.backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
+.backup-bar button.sec{background:#334155;}
+@media(max-width:900px){ .grid-2{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<nav>
+  <div>📦 RESTOPRO</div>
+  <ul>
+    <li><a href="dashboard.html">📊 Dashboard</a></li>
+    <li><a href="master.html">📦 Menu</a></li>
+    <li><a href="meja.html">🪑 Meja</a></li>
+    <li><a href="kasir.html">💼 Kasir</a></li>
+    <li><a href="kasorder.html">🔔 Order Cust</a></li>
+    <li><a href="pettycash.html">👛 Petty Cash</a></li>
+    <li><a href="laporan.html">📄 Laporan</a></li>
+    <li><a href="tools.html" class="active">⚙️ Tools</a></li>
+  </ul>
+</nav>
+<div class="backup-bar">
+  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
+  <span style="display:flex;gap:6px;align-items:center">
+    <button onclick="backupSekarang('manual')">Backup Manual</button>
+    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
+  </span>
+  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+</div>
+
+<div class="container">
+  <div class="grid-2">
+    <div class="card">
+      <h2>⚙️ Konfigurasi Restoran</h2>
+      <form id="formKonfigurasi">
+        <div class="form-group"><label>NAMA RESTORAN</label><input type="text" id="namaRestoran" required></div>
+        <div class="form-group"><label>PAJAK PPN (%)</label><input type="number" id="pajakPPN" value="11"></div>
+        <div class="form-group"><label>NOMOR BILL TRANSAKSI BERIKUTNYA</label><input type="text" id="nomorBill" placeholder="BILL-0001"></div>
+        <button type="submit" class="btn-hijau">💾 Simpan Konfigurasi</button>
+      </form>
+      <p style="font-size:11px;color:#64748b;margin-top:10px;">✅ Tersimpan di LocalStorage beb! Kasir langsung pake PPN & Nomor Bill ini beb!</p>
+    </div>
+
+    <div class="card">
+      <h2>👤 Tambah / Kelola Akun Pengguna</h2>
+      <form id="formUser">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div class="form-group"><label>USERNAME</label><input type="text" id="username" required></div>
+          <div class="form-group"><label>NAMA LENGKAP</label><input type="text" id="namaLengkap" required></div>
+          <div class="form-group"><label>PASSWORD</label><input type="password" id="password" required></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 200px; gap:10px; align-items:end;">
+          <div class="form-group">
+            <label>ROLE JABATAN</label>
+            <select id="roleUser">
+              <option value="Admin/Owner">👑 Admin / Owner</option>
+              <option value="Manager">🧑‍💼 Manager</option>
+              <option value="Kasir">💼 Kasir</option>
+              <option value="Waitress">🙋 Waitress</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-hijau">📁 Simpan Akun User</button>
+        </div>
+      </form>
+      <p id="infoEdit" style="font-size:12px;color:#f59e0b;font-weight:700;display:none;">✏️ Lagi Edit User beb - Simpan buat update!</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <h2>Daftar Pengguna Aktif</h2>
+    <table id="tableUser"><thead><tr><th>Username</th><th>Nama Lengkap</th><th>Role</th><th width="180">Aksi</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<script>
+  // ===== TOOLS - 100% LOCALSTORAGE, TANPA FIREBASE! =====
+  const KEY_DATA = 'restopro_data_v1';
+  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
+  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
+  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+  function loadData(){
+    let raw = localStorage.getItem(KEY_DATA);
+    if(!raw){
+      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[{id:'U1', username:'admin', nama:'Admin', password:'admin', role:'Admin/Owner'}], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro"}, pettyCash:0, pettycash:[] };
+      localStorage.setItem(KEY_DATA, JSON.stringify(awal));
+      return awal;
+    }
+    let data = JSON.parse(raw);
+    if(!data.konfigurasi) data.konfigurasi = {nama:"RestoPro", ppn:11, bill:"BILL-0001"};
+    if(!data.users) data.users = [];
+    // Kalau users masih object {id: {...}} dari Firebase lama, ubah jadi array beb!
+    if(data.users && !Array.isArray(data.users) && typeof data.users === 'object'){
+      data.users = Object.keys(data.users).map(k => ({ id: k, ...data.users[k] }));
+    }
+    return data;
+  }
+  function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
+  function cekStatusSaja(){
+    let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
+    if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; }
+  }
+  function backupSekarang(mode){
+    let data = loadData(); let userLogin = localStorage.getItem('userLogin');
+    let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
+    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
+    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
+    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+  }
+  function restoreFile(e){
+    let file = e.target.files[0]; if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(){
+      try{
+        let data = JSON.parse(reader.result);
+        if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin));
+        localStorage.setItem(KEY_DATA, JSON.stringify(data));
+        alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!');
+        location.reload();
+      }catch(err){ alert('File backup rusak beb!'); }
+    };
+    reader.readAsText(file);
+  }
+
+  let editUserId = null;
+
+  // LOAD KONFIGURASI DARI LOCALSTORAGE
+  function loadKonfigurasi(){
+    let data = loadData();
+    let k = data.konfigurasi || {nama:"RestoPro", ppn:11, bill:"BILL-0001"};
+    document.getElementById('namaRestoran').value = k.nama || 'RestoPro';
+    document.getElementById('pajakPPN').value = k.ppn ?? 11;
+    document.getElementById('nomorBill').value = k.bill || 'BILL-0001';
+  }
+
+  // SIMPAN KONFIGURASI KE LOCALSTORAGE
+  document.getElementById('formKonfigurasi').addEventListener("submit", e=>{
+    e.preventDefault();
+    let data = loadData();
+    data.konfigurasi = {
+      nama: document.getElementById('namaRestoran').value,
+      ppn: +document.getElementById('pajakPPN').value,
+      bill: document.getElementById('nomorBill').value
+    };
+    saveData(data);
+    alert("✅ Konfigurasi Tersimpan ke LocalStorage beb! Kasir langsung pake ini beb!");
+  });
+
+  // LOAD USER DARI LOCALSTORAGE
+  function loadUsers(){
+    let data = loadData();
+    renderUser(data.users || []);
+  }
+
+  function renderUser(userData){
+    let tbody = document.querySelector("#tableUser tbody");
+    if(!userData || userData.length === 0){
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Belum ada user beb!</td></tr>';
+      return;
+    }
+    tbody.innerHTML = userData.map((u)=>`
+      <tr>
+        <td><b>${u.username}</b></td>
+        <td>${u.nama}</td>
+        <td><span class="role-badge">${u.role}</span></td>
+        <td class="td-aksi">
+          <button class="btn-aksi-kecil btn-edit-kecil" onclick="editUser('${u.id}')">✏️ Edit</button>
+          <button class="btn-aksi-kecil btn-delete-kecil" onclick="hapusUser('${u.id}')" ${u.role=="Admin/Owner"?"disabled":""}>🗑️ Hapus</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  // SIMPAN USER KE LOCALSTORAGE
+  document.getElementById('formUser').addEventListener("submit", e=>{
+    e.preventDefault();
+    let data = loadData();
+    if(!data.users) data.users = [];
+    let newUser = {username: document.getElementById('username').value.trim(), nama: document.getElementById('namaLengkap').value.trim(), password: document.getElementById('password').value, role: document.getElementById('roleUser').value};
+    if(editUserId == null){
+      // Cek username dobel beb!
+      if(data.users.some(u => u.username === newUser.username)){
+        alert('Username udah ada beb! Ganti yang lain beb!');
+        return;
+      }
+      newUser.id = 'U' + Date.now();
+      data.users.push(newUser);
+      alert('✅ User baru ditambah beb!');
+    } else {
+      let idx = data.users.findIndex(u => String(u.id) === String(editUserId));
+      if(idx >= 0) data.users[idx] = { ...data.users[idx], ...newUser, id: editUserId };
+      editUserId = null;
+      document.getElementById('infoEdit').style.display = 'none';
+      alert('✅ User berhasil diupdate beb!');
+    }
+    saveData(data);
+    e.target.reset();
+    loadUsers();
+  });
+
+  window.editUser = function(id){
+    let data = loadData();
+    let u = (data.users || []).find(x => String(x.id) === String(id));
+    if(!u) return alert('User nggak ketemu beb!');
+    document.getElementById('username').value = u.username;
+    document.getElementById('namaLengkap').value = u.nama;
+    document.getElementById('password').value = u.password;
+    document.getElementById('roleUser').value = u.role;
+    editUserId = id;
+    document.getElementById('infoEdit').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  window.hapusUser = function(id){
+    let data = loadData();
+    let u = (data.users || []).find(x => String(x.id) === String(id));
+    if(u && u.role === 'Admin/Owner') return alert('Admin/Owner nggak boleh dihapus beb!');
+    if(confirm("Hapus user ini beb?")){
+      data.users = (data.users || []).filter(x => String(x.id) !== String(id));
+      saveData(data);
+      loadUsers();
+    }
+  }
+
+  cekStatusSaja();
+  loadKonfigurasi();
+  loadUsers();
+</script>
+</body>
+</html>

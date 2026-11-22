@@ -23,15 +23,20 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
 .backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between; border-radius:12px; margin-bottom:15px;}
 .backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
 .backup-bar button.sec{background:#334155;}
+.printer-info{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px;font-weight:700;padding:9px 12px;border-radius:8px;margin-bottom:15px}
+.btn-preview{background:#3b82f6;color:#fff}
+.btn-print-laporan{background:#9333ea;color:#fff}
+.modal-preview{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;justify-content:center;align-items:center;z-index:10000;padding:15px;box-sizing:border-box}
+.modal-preview-content{background:#fff;color:#1e293b;padding:22px;border-radius:14px;width:100%;max-width:820px;max-height:90vh;overflow:auto}
 @media(max-width:900px){ .grid2{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1><i class="fa-solid fa-wallet"></i> Manajemen Kas Kecil (Petty Cash) - FINAL</h1>
+  <h1><i class="fa-solid fa-wallet"></i> Manajemen Kas Kecil (Petty Cash)</h1>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <div class="nav-mini"><a href="dashboard.html">📊 Dashboard</a><a href="master.html">📦 Master</a><a href="meja.html">🪑 Meja</a><a href="kasir.html">💼 Kasir</a><a href="kasorder.html">🔔 Order</a><a href="pettycash.html" class="active">👛 Petty Cash</a><a href="laporan.html">📄 Laporan</a><a href="tools.html">⚙️ Tools</a></div>
-    <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
+    
   </div>
 </div>
 <div class="backup-bar">
@@ -41,6 +46,7 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
 </div>
 <div class="card">
     <h2 style="font-size:18px;font-weight:700;color:#fff;margin-bottom:20px;border:none">💵 <span id="txtTanggalPetty" style="color:#f97316"></span></h2>
+    <div class="printer-info" id="infoPrinterAktif">🖨️ Printer Aktif: Loading...</div>
     <div class="grid4">
         <div style="background:#334155;padding:16px;border-radius:10px;border-left:4px solid #3b82f6"><p style="color:#94a3b8;font-size:11px;font-weight:600">SALDO AWAL (MODAL) <br><span id="labelSaldoInfo" style="color:#fbbf24;font-size:9px;font-weight:400"></span></p><h3 id="lblPettySaldoAwal" style="font-size:20px;color:#3b82f6;font-weight:800;margin-top:4px">Rp 0</h3></div>
         <div style="background:#334155;padding:16px;border-radius:10px;border-left:4px solid #10b981"><p style="color:#94a3b8;font-size:11px;font-weight:600">TOTAL KAS MASUK (FILTER)</p><h3 id="lblPettyTotalMasuk" style="font-size:20px;color:#10b981;font-weight:800;margin-top:4px">Rp 0</h3></div>
@@ -52,6 +58,10 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
         <div style="flex:1;min-width:140px"><label style="font-size:11px">SAMPAI TANGGAL</label><input type="date" id="filterPettySelesai"></div>
         <button id="btnFilterPetty" class="btn" style="background:#3b82f6;color:#fff">Tampilkan</button>
         <select id="urutPetty" style="width:220px"><option value="terlama" selected>Urut: Pertama Masuk di Atas</option><option value="terbaru">Urut: Terbaru di Atas</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-preview" onclick="previewLaporanPetty()">👁️ Preview Laporan</button>
+      <button class="btn btn-print-laporan" onclick="printLaporanPetty()">🖨️ Print Laporan</button>
     </div>
     <div class="grid2">
         <div>
@@ -89,26 +99,99 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
     <div style="display:flex;gap:10px"><button onclick="tutupEdit()" class="btn" style="flex:1;background:#475569;color:#fff">Batal</button><button onclick="simpanEdit()" class="btn" style="flex:1;background:#10b981;color:#fff">Simpan</button></div>
   </div>
 </div>
+<div id="modalPreviewPetty" class="modal-preview">
+  <div class="modal-preview-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="margin:0">👁️ Preview Laporan Petty Cash</h3><button onclick="tutupPreviewPetty()" style="border:0;background:#ef4444;color:#fff;padding:7px 14px;border-radius:20px;cursor:pointer;font-weight:700;font-family:'Poppins'">✖ Tutup</button></div>
+    <div id="isiPreviewPetty" style="margin-top:15px"></div>
+    <button onclick="printLaporanPetty()" class="btn" style="width:100%;background:#9333ea;color:#fff;margin-top:15px">🖨️ Print Laporan Ini</button>
+  </div>
+</div>
 <script>
-  // ===== PETTY CASH - 100% LOCALSTORAGE, TANPA FIREBASE! =====
   const KEY_DATA = 'restopro_data_v1';
   const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
   function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
   function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
+
+  // ===== PRINTER DINAMIS BEB! BACA DARI TOOLS > SETUP PRINTER BEB! =====
+  function getPrinterSetup(){
+    let data = loadData();
+    return data.konfigurasi?.printer || {laporan:"", kasir:"", ukuranStruk:"80mm"};
+  }
+  function tampilkanPrinterAktif(){
+    let p = getPrinterSetup();
+    let el = document.getElementById('infoPrinterAktif');
+    if(!el) return;
+    if(p.laporan) el.textContent = '🖨️ Printer Aktif: ' + p.laporan + ' (A4) - Setting dari Tools beb!';
+    else el.textContent = '🖨️ Printer Aktif: Belum di-setting beb! Setting di Tools > Setup Printer beb!';
+  }
+
+  // ===== LAPORAN PETTY CASH - PREVIEW + PRINT BEB! =====
+  function getDataPettyFiltered(){
+    let tglMulai = document.getElementById('filterPettyMulai').value;
+    let tglSelesai = document.getElementById('filterPettySelesai').value;
+    let saldoSebelum = 0;
+    if(tglMulai){
+      (dataPetty||[]).forEach(function(item){
+        if(item.tanggal && item.tanggal < tglMulai){
+          let isMasuk = String(item.tipe||'').includes('Masuk') || String(item.tipe||'').includes('PENJUALAN');
+          if(isMasuk) saldoSebelum += Number(item.nominal||0); else saldoSebelum -= Number(item.nominal||0);
+        }
+      });
+    }
+    let list = [...(dataPetty||[])];
+    if(tglMulai && tglSelesai) list = list.filter(function(d){ return d.tanggal >= tglMulai && d.tanggal <= tglSelesai; });
+    let urut = document.getElementById('urutPetty')?.value || 'terlama';
+    list.sort(function(a,b){ let ta = a.created||0, tb = b.created||0; return urut==='terlama' ? ta-tb : tb-ta; });
+    let masuk = 0, keluar = 0;
+    list.forEach(function(x){
+      let isMasuk = String(x.tipe||'').includes('Masuk') || String(x.tipe||'').includes('PENJUALAN');
+      if(isMasuk) masuk += Number(x.nominal||0); else keluar += Number(x.nominal||0);
+    });
+    let saldoAwalPeriode = saldoAwalConfig + saldoSebelum;
+    return { list:list, masuk:masuk, keluar:keluar, saldoAwal: saldoAwalPeriode, saldoAkhir: saldoAwalPeriode + masuk - keluar, dari: tglMulai, sampai: tglSelesai };
+  }
+  function buatHtmlLaporanPetty(){
+    let p = getPrinterSetup();
+    let namaPrinter = p.laporan || 'Belum di-setting di Tools beb!';
+    let h = getDataPettyFiltered();
+    let periode = (h.dari && h.sampai) ? h.dari + ' sd ' + h.sampai : 'Semua Data';
+    let rows = h.list.map(function(x,i){
+      let isMasuk = String(x.tipe||'').includes('Masuk') || String(x.tipe||'').includes('PENJUALAN');
+      let warna = isMasuk ? '#10b981' : '#ef4444';
+      return '<tr><td style="padding:6px;border-bottom:1px dotted #ccc">' + (i+1) + '</td><td style="padding:6px;border-bottom:1px dotted #ccc">' + (x.waktu || x.tanggal || '-') + '</td><td style="padding:6px;border-bottom:1px dotted #ccc"><span style="color:' + warna + ';font-weight:700">' + (x.tipe||'-') + '</span></td><td style="padding:6px;border-bottom:1px dotted #ccc">' + (x.keterangan||'-') + '</td><td style="padding:6px;border-bottom:1px dotted #ccc;text-align:right">Rp ' + Number(x.nominal||0).toLocaleString('id-ID') + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" style="padding:15px;text-align:center;color:#64748b">Belum ada mutasi di tanggal ini beb!</td></tr>';
+    return '<div style="text-align:center"><h3 style="margin:0;font-size:18px">LAPORAN PETTY CASH RESTOPRO</h3><p style="margin:4px 0;font-size:12px">Periode: ' + periode + ' | Dicetak: ' + new Date().toLocaleString('id-ID') + ' | Printer: ' + namaPrinter + ' (A4)</p></div>'
+      + '<div style="display:flex;gap:10px;margin:14px 0;flex-wrap:wrap"><div style="flex:1;min-width:120px;background:#eff6ff;padding:10px;border-radius:8px;text-align:center"><b>SALDO AWAL</b><br>Rp ' + h.saldoAwal.toLocaleString('id-ID') + '</div><div style="flex:1;min-width:120px;background:#ecfdf5;padding:10px;border-radius:8px;text-align:center"><b>MASUK</b><br>Rp ' + h.masuk.toLocaleString('id-ID') + '</div><div style="flex:1;min-width:120px;background:#fef2f2;padding:10px;border-radius:8px;text-align:center"><b>KELUAR</b><br>Rp ' + h.keluar.toLocaleString('id-ID') + '</div><div style="flex:1;min-width:120px;background:#eff6ff;padding:10px;border-radius:8px;text-align:center"><b>SALDO AKHIR</b><br>Rp ' + h.saldoAkhir.toLocaleString('id-ID') + '</div></div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left;padding:6px;border-bottom:2px solid #000">No</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000">Waktu</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000">Jenis</th><th style="text-align:left;padding:6px;border-bottom:2px solid #000">Keterangan</th><th style="text-align:right;padding:6px;border-bottom:2px solid #000">Nominal</th></tr></thead><tbody>' + rows + '</tbody><tfoot><tr><td colspan="4" style="padding:8px 6px;border-top:2px solid #000;font-weight:700;text-align:right">SALDO AKHIR</td><td style="padding:8px 6px;border-top:2px solid #000;font-weight:700;text-align:right">Rp ' + h.saldoAkhir.toLocaleString('id-ID') + '</td></tr></tfoot></table>';
+  }
+  window.previewLaporanPetty = function(){
+    document.getElementById('isiPreviewPetty').innerHTML = buatHtmlLaporanPetty();
+    document.getElementById('modalPreviewPetty').style.display = 'flex';
+  }
+  window.tutupPreviewPetty = function(){ document.getElementById('modalPreviewPetty').style.display = 'none'; }
+  window.printLaporanPetty = function(){
+    let p = getPrinterSetup();
+    let namaPrinter = p.laporan || 'Belum di-setting di Tools beb!';
+    if(namaPrinter !== 'Belum di-setting di Tools beb!'){ alert('Beb, pilih printer ini di dialog Print beb: ' + namaPrinter + ' (A4)'); }
+    let w = window.open('', '', 'height=700,width=900');
+    w.document.write('<html><head><title>Laporan Petty Cash</title><style>@page{size:A4;margin:15mm} body{font-family:Arial,sans-serif;padding:10px;margin:0}</style></head><body>' + buatHtmlLaporanPetty() + '<p style="text-align:center;font-size:11px;margin-top:20px">--- Terima Kasih ---</p></body></html>');
+    w.document.close();
+    w.print();
+  }
+
   function loadData(){
     let raw = localStorage.getItem(KEY_DATA);
     if(!raw){
-      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro",pettySaldoAwal:0}, pettyCash:0, pettycash:[] };
+      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro",pettySaldoAwal:0,printer:{laporan:"",kasir:"",ukuranStruk:"80mm"}}, pettyCash:0, pettycash:[] };
       localStorage.setItem(KEY_DATA, JSON.stringify(awal)); return awal;
     }
     let data = JSON.parse(raw);
-    if(!data.konfigurasi) data.konfigurasi = {ppn:11,bill:"BILL-0001",nama:"RestoPro",pettySaldoAwal:0};
+    if(!data.konfigurasi) data.konfigurasi = {ppn:11,bill:"BILL-0001",nama:"RestoPro",pettySaldoAwal:0,printer:{laporan:"",kasir:"",ukuranStruk:"80mm"}};
     if(data.konfigurasi.pettySaldoAwal == null) data.konfigurasi.pettySaldoAwal = data.konfigurasi.saldoAwal || 0;
-    // Normalisasi pettycash: kalau masih object {saldo:..., ...} atau {id: {...}} ubah jadi array beb!
+    if(!data.konfigurasi.printer) data.konfigurasi.printer = {laporan:"",kasir:"",ukuranStruk:"80mm"};
     if(!data.pettycash) data.pettycash = [];
     if(!Array.isArray(data.pettycash)){
       if(typeof data.pettycash === 'object'){
-        // Kalau ada key saldo aja, bukan list, anggap list kosong
         let keys = Object.keys(data.pettycash).filter(k => k !== 'saldo');
         if(keys.length > 0) data.pettycash = keys.map(k => ({ id: k, ...data.pettycash[k] }));
         else data.pettycash = [];
@@ -120,29 +203,22 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
   function cekStatusSaja(){ let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup'); if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; } }
   function backupSekarang(mode){ let data = loadData(); let userLogin = localStorage.getItem('userLogin'); let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() }; let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log)); let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove(); document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile; }
   function restoreFile(e){ let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(){ try{ let data = JSON.parse(reader.result); if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin)); localStorage.setItem(KEY_DATA, JSON.stringify(data)); alert('Restore berhasil beb!'); location.reload(); }catch(err){ alert('File backup rusak beb!'); } }; reader.readAsText(file); }
-
   let userLogin = JSON.parse(localStorage.getItem("userLogin") || "null");
-  // Kunci Role - normalisasi biar "Admin / Owner" ke-detect beb!
   let roleNorm = String(userLogin?.role || '').toLowerCase().replace(/[^a-z]/g,'');
   if(!userLogin || !['adminowner','manager'].includes(roleNorm)){ alert("Anda tidak punya akses!"); window.location.href="index.html"; }
   let dataPetty = []; let saldoAwalConfig = 0;
-
   function refreshDariLocal(){
     let data = loadData();
     dataPetty = data.pettycash || [];
     saldoAwalConfig = Number(data.konfigurasi?.pettySaldoAwal || 0);
+    tampilkanPrinterAktif();
     renderPettyCash();
-    // Sinkron saldo akhir ke Dashboard beb!
     let totalMasukAll = 0, totalKeluarAll = 0;
     dataPetty.forEach(item => {
       let isMasuk = String(item.tipe||'').includes('Masuk') || String(item.tipe||'').includes('PENJUALAN');
       if(isMasuk) totalMasukAll += Number(item.nominal||0); else totalKeluarAll += Number(item.nominal||0);
     });
-    // Jangan overwrite di sini beb, biar render yang hitung, tapi update pettyCash buat Dashboard!
-    // Dashboard ngitung dari pettyCash, jadi kita update biar sama!
-    // data.pettyCash = saldoAwalConfig + totalMasukAll - totalKeluarAll; saveData(data);
   }
-
   function renderPettyCash(){
       const tbody = document.querySelector('#tablePettyCash tbody'); tbody.innerHTML='';
       let totalMasuk=0, totalKeluar=0, saldoSebelum=0;
@@ -175,15 +251,10 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
       document.getElementById('lblPettyTotalMasuk').innerText=`Rp ${totalMasuk.toLocaleString('id-ID')}`;
       document.getElementById('lblPettyTotalKeluar').innerText=`Rp ${totalKeluar.toLocaleString('id-ID')}`;
       document.getElementById('lblPettySaldoAkhir').innerText=`Rp ${(saldoAwalPeriode+totalMasuk-totalKeluar).toLocaleString('id-ID')}`;
-      // Update pettyCash buat Dashboard beb!
       let d = loadData();
-      // Hitung total semua, bukan cuma filter beb, biar Dashboard bener!
       let mAll=0,kAll=0; (d.pettycash||[]).forEach(it=>{ let im=String(it.tipe||'').includes('Masuk')||String(it.tipe||'').includes('PENJUALAN'); if(im) mAll+=Number(it.nominal||0); else kAll+=Number(it.nominal||0); });
       d.pettyCash = Number(d.konfigurasi?.pettySaldoAwal||0) + mAll - kAll;
-      // Jangan save tiap render kalau sama beb, biar nggak loop!
-      // saveData(d);
   }
-
   window.bukaEdit=function(id){
     let data = loadData();
     let item = (data.pettycash||[]).find(x => String(x.id) === String(id));
@@ -233,7 +304,6 @@ input,select{padding:10px;border:1px solid #475569;border-radius:6px;width:100%;
   document.getElementById('btnFilterPetty').onclick=filterPettyByDate;
   document.getElementById('urutPetty').onchange=renderPettyCash;
   cekStatusSaja();
-  // Init kalau DOMContentLoaded udah kelewat beb!
   if(document.getElementById('filterPettyMulai').value === ''){
     document.getElementById('txtTanggalPetty').innerText=new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     let today=new Date().toISOString().split('T')[0];
