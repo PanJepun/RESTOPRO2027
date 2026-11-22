@@ -2,339 +2,160 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>RESTOPRO - Tools</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<title>RESTOPRO - Tools - Printer Dropdown</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-body{font-family: 'Poppins'; margin:0; background:#e6ecf3;}
-nav{background:#1e293b; color:#fff; padding:8px 20px; display:flex; align-items:center; justify-content:space-between;}
-nav ul{display:flex; gap:5px; list-style:none; margin:0; padding:0; flex-wrap:wrap;}
-nav ul li a{color:#cbd5e1; text-decoration:none; padding:8px 12px; font-size:13px; border-radius:6px;}
-nav ul li a.active{background:#10b981; color:#fff;}
-.container{padding:20px 30px;}.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
-.card{background:#fff; border-radius:12px; padding:20px;}
-.card h2{font-size:16px; margin:0 0 15px 0; font-weight:700; border-bottom:1px solid #eee; padding-bottom:10px;}
-.card h3{font-size:13px; margin:18px 0 10px 0; color:#1e293b;}
-.form-group{margin-bottom:12px;}
-.form-group label{font-size:12px; color:#64748b; display:block; margin-bottom:4px; text-transform:uppercase;}
-input, select, button{padding:10px; border:1px solid #cbd5e1; border-radius:6px; width:100%; box-sizing:border-box; font-family: 'Poppins';}
-.btn-hijau{background:#10b981; color:#fff; border:none; font-weight:700; cursor:pointer;}
-.btn-biru{background:#2563eb; color:#fff; border:none; font-weight:700; cursor:pointer;}
-.btn-abu{background:#64748b; color:#fff; border:none; font-weight:700; cursor:pointer;}
-table{width:100%; border-collapse:collapse; margin-top:10px;}
-th{background:#1e293b; color:#fff; padding:10px; text-align:left; font-size:13px;}
-td{border-bottom:1px solid #e2e8f0; padding:10px; font-size:13px;}
-.role-badge{background:#e2e8f0; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;}
-.td-aksi{display:flex; gap:8px;}
-.btn-aksi-kecil{padding:6px 12px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; width:auto;}
-.btn-edit-kecil{background:#f59e0b; color:#fff;}.btn-delete-kecil{background:#ef4444; color:#fff;}
-.backup-bar{background:#1e293b; color:#cbd5e1; font-size:12px; padding:8px 20px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:space-between;}
-.backup-bar button{background:#f97316; border:0; padding:6px 10px; border-radius:20px; font-weight:700; cursor:pointer; color:#fff; font-size:11px; font-family:'Poppins';}
-.backup-bar button.sec{background:#334155;}
-.hint{font-size:11px;color:#64748b;margin-top:6px;}
-.row-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-@media(max-width:900px){ .grid-2{grid-template-columns:1fr;} .row-2{grid-template-columns:1fr;} }
+body{font-family:'Poppins',sans-serif;margin:0;background:#0f172a;padding:20px;color:#e2e8f0;}
+.header{background:rgba(30,41,59,0.8);padding:15px 20px;border-radius:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border:1px solid rgba(255,255,255,0.1)}
+.header h1{margin:0;font-size:18px;color:#f97316;}
+.header a{color:#fff;text-decoration:none;background:#10b981;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;}
+.nav-mini{display:flex;gap:8px;flex-wrap:wrap;}
+.nav-mini a{color:#cbd5e1;text-decoration:none;font-size:12px;padding:6px 10px;border-radius:20px;background:#1e293b;}
+.nav-mini a.active{background:#f97316;color:#fff;}
+.card{background:rgba(30,41,59,0.8);padding:25px;border-radius:16px;border:1px solid rgba(255,255,255,0.1);margin-bottom:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+input,select{padding:11px;border:1px solid #475569;border-radius:8px;width:100%;box-sizing:border-box;background:#1e293b;color:#fff;font-family:'Poppins';font-size:13px}
+.btn{padding:11px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:'Poppins';font-size:13px}
+.label{font-size:12px;font-weight:700;color:#fff;margin-bottom:8px;display:block}
+.chip{display:flex;justify-content:space-between;align-items:center;background:#1e293b;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:8px}
+.chip button{background:#ef4444;color:#fff;border:0;padding:5px 10px;border-radius:20px;cursor:pointer;font-weight:700;font-family:'Poppins';font-size:11px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<nav>
-  <div>📦 RESTOPRO</div>
-  <ul>
-    <li><a href="dashboard.html">📊 Dashboard</a></li>
-    <li><a href="master.html">📦 Menu</a></li>
-    <li><a href="meja.html">🪑 Meja</a></li>
-    <li><a href="kasir.html">💼 Kasir</a></li>
-    <li><a href="kasorder.html">🔔 Order Cust</a></li>
-    <li><a href="pettycash.html">👛 Petty Cash</a></li>
-    <li><a href="laporan.html">📄 Laporan</a></li>
-    <li><a href="tools.html" class="active">⚙️ Tools</a></li>
-  </ul>
-</nav>
-<div class="backup-bar">
-  <span id="statusBackup">⏳ Cek Backup Hari Ini...</span>
-  <span style="display:flex;gap:6px;align-items:center">
-    <button onclick="backupSekarang('manual')">Backup Manual</button>
-    <button class="sec" onclick="document.getElementById('fileRestore').click()">Restore</button>
-  </span>
-  <input type="file" id="fileRestore" accept=".json" style="display:none" onchange="restoreFile(event)">
+<div class="header">
+  <h1><i class="fa-solid fa-gear"></i> Tools - Setup Printer</h1>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <div class="nav-mini"><a href="dashboard.html">📊 Dashboard</a><a href="master.html">📦 Master</a><a href="meja.html">🪑 Meja</a><a href="kasir.html">💼 Kasir</a><a href="kasorder.html">🔔 Order</a><a href="pettycash.html">👛 Petty Cash</a><a href="laporan.html">📄 Laporan</a><a href="tools.html" class="active">⚙️ Tools</a></div>
+    <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
+  </div>
 </div>
 
-<div class="container">
-  <div class="grid-2">
-    <div class="card">
-      <h2>⚙️ Konfigurasi Restoran</h2>
-      <form id="formKonfigurasi">
-        <div class="form-group"><label>NAMA RESTORAN</label><input type="text" id="namaRestoran" required></div>
-        <div class="form-group"><label>PAJAK PPN (%)</label><input type="number" id="pajakPPN" value="11"></div>
-        <div class="form-group"><label>NOMOR BILL TRANSAKSI BERIKUTNYA</label><input type="text" id="nomorBill" placeholder="BILL-0001"></div>
-        <button type="submit" class="btn-hijau">💾 Simpan Konfigurasi</button>
-      </form>
-      <p style="font-size:11px;color:#64748b;margin-top:10px;">✅ Tersimpan di LocalStorage beb!</p>
-    </div>
+<div class="card">
+  <h2 style="margin:0 0 5px 0;font-size:18px">🖨️ Setup Printer - Dropdown Beb!</h2>
+  <p style="font-size:12px;color:#94a3b8;margin:0 0 20px 0">Pilih dari dropdown beb! Tambah / Hapus printer di sini beb, otomatis kepake di Kasir + Laporan + Petty Cash beb!</p>
 
-    <div class="card">
-      <h2>👤 Tambah / Kelola Akun Pengguna</h2>
-      <form id="formUser">
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-          <div class="form-group"><label>USERNAME</label><input type="text" id="username" required></div>
-          <div class="form-group"><label>NAMA LENGKAP</label><input type="text" id="namaLengkap" required></div>
-          <div class="form-group"><label>PASSWORD</label><input type="password" id="password" required></div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 200px; gap:10px; align-items:end;">
-          <div class="form-group">
-            <label>ROLE JABATAN</label>
-            <select id="roleUser">
-              <option value="Admin/Owner">👑 Admin / Owner</option>
-              <option value="Manager">🧑‍💼 Manager</option>
-              <option value="Kasir">💼 Kasir</option>
-              <option value="Waitress">🙋 Waitress</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-hijau">📁 Simpan Akun User</button>
-        </div>
-      </form>
-      <p id="infoEdit" style="font-size:12px;color:#f59e0b;font-weight:700;display:none;">✏️ Lagi Edit User beb - Simpan buat update!</p>
+  <div class="grid2">
+    <div style="background:#334155;padding:16px;border-radius:12px">
+      <span class="label">🧾 PRINTER STRUK KASIR (80mm)</span>
+      <select id="selectPrinterKasir"></select>
+      <p style="font-size:11px;color:#94a3b8;margin:8px 0 0 0">Dipake buat Struk di Kasir beb!</p>
+    </div>
+    <div style="background:#334155;padding:16px;border-radius:12px">
+      <span class="label">📄 PRINTER LAPORAN (A4)</span>
+      <select id="selectPrinterLaporan"></select>
+      <p style="font-size:11px;color:#94a3b8;margin:8px 0 0 0">Dipake buat Laporan + Petty Cash beb!</p>
     </div>
   </div>
 
-  <div class="card" style="margin-top:20px;">
-    <h2>🖨️ Setup Printer</h2>
-    <form id="formPrinter">
-      <div class="row-2">
-        <div>
-          <h3>📄 Printer Laporan</h3>
-          <div class="form-group"><label>NAMA PRINTER LAPORAN</label><input type="text" id="printerLaporan" placeholder="Contoh: Epson L3210 / HP LaserJet / Canon" list="listPrinterLaporan"></div>
-          <datalist id="listPrinterLaporan">
-            <option value="Epson L3210"></option>
-            <option value="HP LaserJet"></option>
-            <option value="Canon PIXMA"></option>
-          </datalist>
-          <p class="hint">Buat cetak Laporan, Petty Cash, Backup. Ukuran A4.</p>
-          <button type="button" class="btn-abu" onclick="tesCetakLaporan()">🖨️ Tes Cetak Laporan</button>
-        </div>
-        <div>
-          <h3>🧾 Printer Kasir / Struk</h3>
-          <div class="form-group"><label>NAMA PRINTER KASIR</label><input type="text" id="printerKasir" placeholder="Contoh: Epson TM-T82 / Xprinter XP-80" list="listPrinterKasir"></div>
-          <datalist id="listPrinterKasir">
-            <option value="Epson TM-T82"></option>
-            <option value="Xprinter XP-80"></option>
-            <option value="Xprinter XP-58"></option>
-          </datalist>
-          <div class="form-group"><label>UKURAN STRUK</label>
-            <select id="ukuranStruk">
-              <option value="80mm">80mm - Printer 80mm</option>
-              <option value="58mm">58mm - Printer 58mm</option>
-            </select>
-          </div>
-          <button type="button" class="btn-biru" onclick="tesCetakStruk()">🧾 Tes Cetak Struk</button>
-        </div>
-      </div>
-      <div style="margin-top:16px;"><button type="submit" class="btn-hijau">💾 Simpan Setup Printer</button></div>
-    </form>
-    
-    <p id="infoPrinter" style="font-size:12px;color:#059669;font-weight:700;display:none;"></p>
+  <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap">
+    <button onclick="simpanPrinterDropdown()" class="btn" style="flex:1;background:#10b981;color:#fff">💾 Simpan Pilihan Printer</button>
+    <button onclick="location.reload()" class="btn" style="background:#475569;color:#fff">🔄 Refresh</button>
   </div>
+  <p id="infoPrinterSimpan" style="font-size:12px;color:#86efac;margin-top:10px"></p>
+</div>
 
-  <div class="card" style="margin-top:20px;">
-    <h2>Daftar Pengguna Aktif</h2>
-    <table id="tableUser"><thead><tr><th>Username</th><th>Nama Lengkap</th><th>Role</th><th width="180">Aksi</th></tr></thead><tbody></tbody></table>
+<div class="card">
+  <h3 style="margin:0 0 15px 0;font-size:16px">➕ Tambah Printer Baru</h3>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <input id="inPrinterBaru" placeholder="Contoh: EPSON TM-T82 / HP LaserJet / Canon PIXMA" style="flex:1;min-width:220px">
+    <button onclick="tambahPrinterBaru()" class="btn" style="background:#3b82f6;color:#fff">➕ Tambah ke Dropdown</button>
   </div>
+  <p style="font-size:11px;color:#94a3b8;margin-top:8px">Beb, nama nya beb, samain persis beb, sama nama di Windows > Settings > Printers & scanners beb!</p>
+
+  <h3 style="margin:20px 0 12px 0;font-size:16px">📋 Daftar Printer Kamu Beb!</h3>
+  <div id="listPrinter"></div>
+  <p id="infoListKosong" style="font-size:12px;color:#94a3b8;display:none">Belum ada printer beb, tambah dulu beb!</p>
 </div>
 
 <script>
-  // ===== TOOLS - 100% LOCALSTORAGE, TANPA FIREBASE! =====
-  const KEY_DATA = 'restopro_data_v1';
-  const KEY_BACKUP_LOG = 'restopro_backup_log_v1';
-  function tanggalHariIni(){ let n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); }
-  function buatNamaFile(){ let now = new Date(); let tgl = tanggalHariIni(); let jam = String(now.getHours()).padStart(2,'0') + '-' + String(now.getMinutes()).padStart(2,'0') + '-' + String(now.getSeconds()).padStart(2,'0'); return `RESTOPRO_${tgl}_${jam}.json`; }
-  function loadData(){
-    let raw = localStorage.getItem(KEY_DATA);
-    if(!raw){
-      let awal = { toko:'RESTOPRO', dibuat:new Date().toISOString(), promo_gallery:[], transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], mejaTertahan:{}, users:[{id:'U1', username:'admin', nama:'Admin', password:'admin', role:'Admin/Owner'}], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro", printer:{laporan:"", kasir:"", ukuranStruk:"80mm"}}, pettyCash:0, pettycash:[] };
-      localStorage.setItem(KEY_DATA, JSON.stringify(awal));
-      return awal;
-    }
-    let data = JSON.parse(raw);
-    if(!data.konfigurasi) data.konfigurasi = {nama:"RestoPro", ppn:11, bill:"BILL-0001"};
-    if(!data.konfigurasi.printer) data.konfigurasi.printer = {laporan:"", kasir:"", ukuranStruk:"80mm"};
-    if(!data.users) data.users = [];
-    if(data.users && !Array.isArray(data.users) && typeof data.users === 'object'){
-      data.users = Object.keys(data.users).map(k => ({ id: k, ...data.users[k] }));
-    }
-    return data;
+const KEY_DATA = 'restopro_data_v1';
+function loadData(){
+  let raw = localStorage.getItem(KEY_DATA);
+  if(!raw){
+    let awal = { toko:'RESTOPRO', transaksi:[], orders:[], inventory:[], menuData:[], mejaData:[], users:[], konfigurasi:{ppn:11,bill:"BILL-0001",nama:"RestoPro",pettySaldoAwal:0, printer:{laporan:"",kasir:"",ukuranStruk:"80mm"}, printerList:["EPSON TM-T82","HP LaserJet"] }, pettyCash:0, pettycash:[] };
+    localStorage.setItem(KEY_DATA, JSON.stringify(awal)); return awal;
   }
-  function saveData(data){ localStorage.setItem(KEY_DATA, JSON.stringify(data)); }
-  function cekStatusSaja(){
-    let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; let el = document.getElementById('statusBackup');
-    if(log[tgl]){ el.textContent = '✅ Backup Hari Ini Sudah Ada: ' + log[tgl]; } else { el.textContent = '⚠️ Belum Ada Backup Hari Ini - Backup di Dashboard / Login dulu beb!'; }
+  let data = JSON.parse(raw);
+  if(!data.konfigurasi) data.konfigurasi = {};
+  if(!data.konfigurasi.printer) data.konfigurasi.printer = {laporan:"",kasir:"",ukuranStruk:"80mm"};
+  if(!data.konfigurasi.printerList || !Array.isArray(data.konfigurasi.printerList)){
+    data.konfigurasi.printerList = [];
+    if(data.konfigurasi.printer.kasir) data.konfigurasi.printerList.push(data.konfigurasi.printer.kasir);
+    if(data.konfigurasi.printer.laporan && !data.konfigurasi.printerList.includes(data.konfigurasi.printer.laporan)) data.konfigurasi.printerList.push(data.konfigurasi.printer.laporan);
+    if(data.konfigurasi.printerList.length===0) data.konfigurasi.printerList = ["EPSON TM-T82","HP LaserJet"];
   }
-  function backupSekarang(mode){
-    let data = loadData(); let userLogin = localStorage.getItem('userLogin');
-    let dataBackup = { ...data, userLogin: userLogin ? JSON.parse(userLogin) : null, backupMode: mode, backupAt: new Date().toISOString() };
-    let namaFile = buatNamaFile(); let tgl = tanggalHariIni(); let logRaw = localStorage.getItem(KEY_BACKUP_LOG); let log = logRaw ? JSON.parse(logRaw) : {}; log[tgl] = namaFile; localStorage.setItem(KEY_BACKUP_LOG, JSON.stringify(log));
-    let blob = new Blob([JSON.stringify(dataBackup, null, 2)], {type:'application/json'}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = namaFile; document.body.appendChild(a); a.click(); a.remove();
-    document.getElementById('statusBackup').textContent = '✅ Backup Berhasil: ' + namaFile;
+  return data;
+}
+function saveData(d){ localStorage.setItem(KEY_DATA, JSON.stringify(d)); }
+
+function renderPrinterDropdowns(){
+  let data = loadData();
+  let list = data.konfigurasi.printerList || [];
+  let pilihKasir = data.konfigurasi.printer?.kasir || "";
+  let pilihLaporan = data.konfigurasi.printer?.laporan || "";
+
+  let selKasir = document.getElementById('selectPrinterKasir');
+  let selLaporan = document.getElementById('selectPrinterLaporan');
+
+  let optKasir = '<option value="">-- Pilih Printer Kasir --</option>' + list.map(function(n){ return '<option value="'+n+'" '+(n===pilihKasir?'selected':'')+'>'+n+'</option>'; }).join('');
+  let optLaporan = '<option value="">-- Pilih Printer Laporan --</option>' + list.map(function(n){ return '<option value="'+n+'" '+(n===pilihLaporan?'selected':'')+'>'+n+'</option>'; }).join('');
+  selKasir.innerHTML = optKasir;
+  selLaporan.innerHTML = optLaporan;
+
+  let wrap = document.getElementById('listPrinter');
+  if(list.length===0){
+    wrap.innerHTML = '';
+    document.getElementById('infoListKosong').style.display = 'block';
+  } else {
+    document.getElementById('infoListKosong').style.display = 'none';
+    wrap.innerHTML = list.map(function(n){
+      let tag = '';
+      if(n===pilihKasir) tag += ' <span style="background:#10b981;color:#fff;font-size:10px;padding:2px 7px;border-radius:20px">KASIR</span>';
+      if(n===pilihLaporan) tag += ' <span style="background:#9333ea;color:#fff;font-size:10px;padding:2px 7px;border-radius:20px">LAPORAN</span>';
+      return '<div class="chip"><span>🖨️ '+n+tag+'</span><button onclick="hapusPrinterDariList(\''+n.replace(/'/g,"\\'")+'\')">🗑️ Hapus</button></div>';
+    }).join('');
   }
-  function restoreFile(e){
-    let file = e.target.files[0]; if(!file) return;
-    let reader = new FileReader();
-    reader.onload = function(){
-      try{
-        let data = JSON.parse(reader.result);
-        if(data.userLogin) localStorage.setItem('userLogin', JSON.stringify(data.userLogin));
-        localStorage.setItem(KEY_DATA, JSON.stringify(data));
-        alert('Restore berhasil beb! Data dari ' + file.name + ' sudah balik!');
-        location.reload();
-      }catch(err){ alert('File backup rusak beb!'); }
-    };
-    reader.readAsText(file);
-  }
+}
 
-  let editUserId = null;
+window.tambahPrinterBaru = function(){
+  let nama = document.getElementById('inPrinterBaru').value.trim();
+  if(!nama) return alert('Isi nama printer dulu beb!');
+  let data = loadData();
+  if(data.konfigurasi.printerList.includes(nama)) return alert('Printer ini udah ada beb!');
+  data.konfigurasi.printerList.push(nama);
+  saveData(data);
+  document.getElementById('inPrinterBaru').value = '';
+  renderPrinterDropdowns();
+  alert('✅ Printer "'+nama+'" berhasil ditambah beb! Sekarang pilih di dropdown beb!');
+}
 
-  // LOAD KONFIGURASI + PRINTER DARI LOCALSTORAGE
-  function loadKonfigurasi(){
-    let data = loadData();
-    let k = data.konfigurasi || {nama:"RestoPro", ppn:11, bill:"BILL-0001"};
-    document.getElementById('namaRestoran').value = k.nama || 'RestoPro';
-    document.getElementById('pajakPPN').value = k.ppn ?? 11;
-    document.getElementById('nomorBill').value = k.bill || 'BILL-0001';
-    let p = k.printer || {laporan:"", kasir:"", ukuranStruk:"80mm"};
-    document.getElementById('printerLaporan').value = p.laporan || '';
-    document.getElementById('printerKasir').value = p.kasir || '';
-    document.getElementById('ukuranStruk').value = p.ukuranStruk || '80mm';
-  }
+window.hapusPrinterDariList = function(nama){
+  if(!confirm('Yakin hapus printer "'+nama+'" beb?')) return;
+  let data = loadData();
+  data.konfigurasi.printerList = (data.konfigurasi.printerList||[]).filter(function(x){ return x!==nama; });
+  if(data.konfigurasi.printer.kasir===nama) data.konfigurasi.printer.kasir = "";
+  if(data.konfigurasi.printer.laporan===nama) data.konfigurasi.printer.laporan = "";
+  saveData(data);
+  renderPrinterDropdowns();
+}
 
-  // SIMPAN KONFIGURASI KE LOCALSTORAGE
-  document.getElementById('formKonfigurasi').addEventListener("submit", e=>{
-    e.preventDefault();
-    let data = loadData();
-    data.konfigurasi = {
-      ...data.konfigurasi,
-      nama: document.getElementById('namaRestoran').value,
-      ppn: +document.getElementById('pajakPPN').value,
-      bill: document.getElementById('nomorBill').value
-    };
-    saveData(data);
-    alert("✅ Konfigurasi Tersimpan ke LocalStorage beb! Kasir langsung pake ini beb!");
-  });
+window.simpanPrinterDropdown = function(){
+  let kasir = document.getElementById('selectPrinterKasir').value;
+  let laporan = document.getElementById('selectPrinterLaporan').value;
+  let data = loadData();
+  if(!data.konfigurasi.printer) data.konfigurasi.printer = {};
+  data.konfigurasi.printer.kasir = kasir;
+  data.konfigurasi.printer.laporan = laporan;
+  data.konfigurasi.printer.ukuranStruk = "80mm";
+  saveData(data);
+  renderPrinterDropdowns();
+  document.getElementById('infoPrinterSimpan').textContent = '✅ Tersimpan beb! Kasir: ' + (kasir||'-') + ' | Laporan: ' + (laporan||'-');
+  alert('✅ Printer tersimpan beb!\nKasir: ' + (kasir||'-') + '\nLaporan: ' + (laporan||'-'));
+}
 
-  // SIMPAN SETUP PRINTER KE LOCALSTORAGE
-  document.getElementById('formPrinter').addEventListener("submit", e=>{
-    e.preventDefault();
-    let data = loadData();
-    if(!data.konfigurasi) data.konfigurasi = {};
-    data.konfigurasi.printer = {
-      laporan: document.getElementById('printerLaporan').value.trim(),
-      kasir: document.getElementById('printerKasir').value.trim(),
-      ukuranStruk: document.getElementById('ukuranStruk').value
-    };
-    saveData(data);
-    let info = document.getElementById('infoPrinter');
-    info.style.display = 'block';
-    info.textContent = '✅ Setup Printer tersimpan beb! Laporan: ' + (data.konfigurasi.printer.laporan || '-') + ' | Kasir: ' + (data.konfigurasi.printer.kasir || '-') + ' (' + data.konfigurasi.printer.ukuranStruk + ')';
-    alert("✅ Setup Printer Tersimpan beb!");
-  });
-
-  // TES CETAK LAPORAN - A4
-  window.tesCetakLaporan = function(){
-    let data = loadData();
-    let nama = data.konfigurasi?.nama || 'RestoPro';
-    let printer = data.konfigurasi?.printer?.laporan || document.getElementById('printerLaporan').value || '-';
-    let w = window.open('', '_blank');
-    w.document.write(`<html><head><title>Tes Cetak Laporan</title><style>body{font-family:Arial;padding:30px} table{width:100%;border-collapse:collapse} td,th{border:1px solid #000;padding:8px}</style></head><body><h2>${nama} - TES CETAK LAPORAN</h2><p>Printer Laporan: <b>${printer}</b></p><p>Tanggal: ${new Date().toLocaleString('id-ID')}</p><table><tr><th>Item</th><th>Qty</th><th>Total</th></tr><tr><td>Contoh Menu</td><td>1</td><td>Rp 25.000</td></tr></table><p>Kalau ini keluar di printer A4 kamu beb, berarti udah bener beb!</p><script>window.print()<\/script></body></html>`);
-    w.document.close();
-  }
-
-  // TES CETAK STRUK - 58mm / 80mm
-  window.tesCetakStruk = function(){
-    let data = loadData();
-    let nama = data.konfigurasi?.nama || 'RestoPro';
-    let printer = data.konfigurasi?.printer?.kasir || document.getElementById('printerKasir').value || '-';
-    let ukuran = data.konfigurasi?.printer?.ukuranStruk || document.getElementById('ukuranStruk').value || '80mm';
-    let lebar = ukuran === '58mm' ? '58mm' : '80mm';
-    let w = window.open('', '_blank');
-    w.document.write(`<html><head><title>Tes Cetak Struk</title><style>@page{size:${lebar} auto;margin:0} body{font-family:monospace;width:${lebar};margin:0;padding:8px;text-align:center} hr{border-top:1px dashed #000}</style></head><body><h3>${nama}</h3><p>TES CETAK STRUK</p><p>Printer: ${printer}<br>Ukuran: ${ukuran}</p><hr><p style="text-align:left">1x Contoh Menu<br>Rp 25.000</p><hr><p><b>TOTAL: Rp 25.000</b></p><p>Terima Kasih beb!</p><script>window.print()<\/script></body></html>`);
-    w.document.close();
-  }
-
-  // LOAD USER DARI LOCALSTORAGE
-  function loadUsers(){
-    let data = loadData();
-    renderUser(data.users || []);
-  }
-
-  function renderUser(userData){
-    let tbody = document.querySelector("#tableUser tbody");
-    if(!userData || userData.length === 0){
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">Belum ada user beb!</td></tr>';
-      return;
-    }
-    tbody.innerHTML = userData.map((u)=>`
-      <tr>
-        <td><b>${u.username}</b></td>
-        <td>${u.nama}</td>
-        <td><span class="role-badge">${u.role}</span></td>
-        <td class="td-aksi">
-          <button class="btn-aksi-kecil btn-edit-kecil" onclick="editUser('${u.id}')">✏️ Edit</button>
-          <button class="btn-aksi-kecil btn-delete-kecil" onclick="hapusUser('${u.id}')" ${u.role=="Admin/Owner"?"disabled":""}>🗑️ Hapus</button>
-        </td>
-      </tr>
-    `).join("");
-  }
-
-  // SIMPAN USER KE LOCALSTORAGE
-  document.getElementById('formUser').addEventListener("submit", e=>{
-    e.preventDefault();
-    let data = loadData();
-    if(!data.users) data.users = [];
-    let newUser = {username: document.getElementById('username').value.trim(), nama: document.getElementById('namaLengkap').value.trim(), password: document.getElementById('password').value, role: document.getElementById('roleUser').value};
-    if(editUserId == null){
-      if(data.users.some(u => u.username === newUser.username)){
-        alert('Username udah ada beb! Ganti yang lain beb!');
-        return;
-      }
-      newUser.id = 'U' + Date.now();
-      data.users.push(newUser);
-      alert('✅ User baru ditambah beb!');
-    } else {
-      let idx = data.users.findIndex(u => String(u.id) === String(editUserId));
-      if(idx >= 0) data.users[idx] = { ...data.users[idx], ...newUser, id: editUserId };
-      editUserId = null;
-      document.getElementById('infoEdit').style.display = 'none';
-      alert('✅ User berhasil diupdate beb!');
-    }
-    saveData(data);
-    e.target.reset();
-    loadUsers();
-  });
-
-  window.editUser = function(id){
-    let data = loadData();
-    let u = (data.users || []).find(x => String(x.id) === String(id));
-    if(!u) return alert('User nggak ketemu beb!');
-    document.getElementById('username').value = u.username;
-    document.getElementById('namaLengkap').value = u.nama;
-    document.getElementById('password').value = u.password;
-    document.getElementById('roleUser').value = u.role;
-    editUserId = id;
-    document.getElementById('infoEdit').style.display = 'block';
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  window.hapusUser = function(id){
-    let data = loadData();
-    let u = (data.users || []).find(x => String(x.id) === String(id));
-    if(u && u.role === 'Admin/Owner') return alert('Admin/Owner nggak boleh dihapus beb!');
-    if(confirm("Hapus user ini beb?")){
-      data.users = (data.users || []).filter(x => String(x.id) !== String(id));
-      saveData(data);
-      loadUsers();
-    }
-  }
-
-  cekStatusSaja();
-  loadKonfigurasi();
-  loadUsers();
+renderPrinterDropdowns();
 </script>
 </body>
 </html>
